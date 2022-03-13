@@ -1,4 +1,5 @@
 ﻿using System;
+using Vanilla.Transpiler;
 
 namespace Vanilla
 {
@@ -10,7 +11,11 @@ namespace Vanilla
 
             string sourceEntryFile = args[0];
 
-            new Parser().Parse(sourceEntryFile);
+            ParseBundle bundle = new Parser().Parse(sourceEntryFile);
+
+            // TODO: use args 
+            string outputFile = new CTranspiler(bundle).GenerateFile();
+            System.IO.File.WriteAllText("test.h", outputFile);
         }
 
         private static string[] GetEffectiveArgs()

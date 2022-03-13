@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Vanilla.ParseTree;
 
 namespace Vanilla
@@ -12,7 +13,7 @@ namespace Vanilla
 
         public Parser() { }
 
-        public void Parse(string startingFile)
+        public ParseBundle Parse(string startingFile)
         {
             TokenStream tokens = Tokenizer.Tokenize(startingFile);
 
@@ -34,6 +35,14 @@ namespace Vanilla
 
             Resolver resolver = new Resolver(entities);
             resolver.Resolve();
+
+            return new ParseBundle()
+            {
+                ClassDefinitions = entities.OfType<ClassDefinition>().ToArray(),
+                FunctionDefinitions = entities.OfType<FunctionDefinition>().ToArray(),
+                EnumDefinitions = entities.OfType<EnumDefinition>().ToArray(),
+                FieldDefinitions = entities.OfType<Field>().ToArray(),
+            };
         }
     }
 }

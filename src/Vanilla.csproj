@@ -5,4 +5,16 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Remove="Transpiler\Support\C\header.h" />
+    <None Remove="Transpiler\Support\C\list.h" />
+    <None Remove="Transpiler\Support\C\value.h" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Transpiler\Support\C\header.h" />
+    <EmbeddedResource Include="Transpiler\Support\C\list.h" />
+    <EmbeddedResource Include="Transpiler\Support\C\value.h" />
+  </ItemGroup>
+
 </Project>
