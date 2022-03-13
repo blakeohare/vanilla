@@ -18,6 +18,7 @@ namespace Vanilla
         public static readonly Type FLOAT = new Type() { IsResolved = true, RootType = "float" };
         public static readonly Type STRING = new Type() { IsResolved = true, RootType = "string" };
         public static readonly Type TYPE = new Type() { IsResolved = true, RootType = "type" };
+        public static readonly Type VOID = new Type() { IsResolved = true, RootType = "void" };
 
         public Type()
         {
@@ -43,11 +44,16 @@ namespace Vanilla
             return value + "'";
         }
 
-        public static Type GetFunctionType(Type returnType, Type[] argTypes)
+        public static Type GetFunctionType(Type returnType, IList<Type> argTypes)
         {
             List<Type> generics = new List<Type>() { returnType };
             generics.AddRange(argTypes);
             return new Type() { FirstToken = null, Generics = generics.ToArray(), RootType = "func" };
+        }
+
+        public static Type GetArrayType(Type itemType)
+        {
+            return new Type() { FirstToken = null, Generics = new Type[] { itemType }, RootType = "array" };
         }
 
         public void Resolve(Resolver resolver)

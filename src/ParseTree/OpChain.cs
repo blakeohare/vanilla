@@ -25,7 +25,78 @@ namespace Vanilla.ParseTree
 
         public override void ResolveTypes(Resolver resolver)
         {
-            throw new System.NotImplementedException();
+            foreach (Expression expression in this.Expressions)
+            {
+                expression.ResolveTypes(resolver);
+            }
+
+            Type accType = this.Expressions[0].ResolvedType;
+            for (int i = 0; i < this.Ops.Length; i++)
+            {
+                accType = this.CombineTypesWithOp(accType, this.Ops[i], this.Expressions[i + 1].ResolvedType);
+            }
+
+            this.ResolvedType = accType;
+        }
+
+        private Type CombineTypesWithOp(Type leftType, Token opToken, Type rightType)
+        {
+            string op = opToken.Value;
+            string left = leftType.RootType;
+            string right = rightType.RootType;
+
+            switch (op)
+            {
+                case "+":
+                    if (left == "string" || right == "string")
+                    {
+                        return Type.STRING;
+                    }
+                    break;
+
+                case "==":
+                case "!=":
+                    return Type.BOOL;
+
+                case "&&":
+                case "||":
+                    if (left == "bool" && right == "bool") return Type.BOOL;
+                    throw new ParserException(opToken, "The " + op + " operator is not supported for non-boolean types.");
+            }
+
+            bool leftIsNum = left == "int" || left == "float";
+            bool rightIsNum = right == "int" || right == "float";
+
+            if (leftIsNum && rightIsNum)
+            {
+                bool intMath = left == "int" && right == "int";
+                Type combinedMathType = intMath ? Type.INT : Type.FLOAT;
+                switch (op)
+                {
+                    case "+":
+                    case "-":
+                    case "/":
+                    case "*":
+                    case "%":
+                        return combinedMathType;
+
+                    case "&":
+                    case "|":
+                    case "^":
+                    case ">>":
+                    case "<<":
+                        if (intMath) return Type.INT;
+                        throw new ParserException(opToken, "The " + op + " operator is not supported for non-integer types. Use $floor if necessary.");
+
+                    case "<":
+                    case ">":
+                    case "<=":
+                    case ">=":
+                        return Type.BOOL;
+                }
+            }
+
+            throw new ParserException(opToken, "The " + op + " operator is not supported for types " + left + " and " + right + ".");
         }
     }
 }

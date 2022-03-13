@@ -43,7 +43,29 @@ namespace Vanilla.ParseTree
 
         public override void ResolveTypes(Resolver resolver)
         {
-            throw new System.NotImplementedException();
+            foreach (Executable initItem in this.Init)
+            {
+                initItem.ResolveTypes(resolver);
+            }
+
+            if (this.Condition != null)
+            {
+                this.Condition.ResolveTypes(resolver);
+                if (this.Condition.ResolvedType.RootType != "bool")
+                {
+                    throw new ParserException(this.Condition.FirstToken, "For loop condition must resolve to a boolean.");
+                }
+            }
+
+            foreach (Executable stepItem in this.Step)
+            {
+                stepItem.ResolveTypes(resolver);
+            }
+
+            foreach (Executable line in this.Code)
+            {
+                line.ResolveTypes(resolver);
+            }
         }
     }
 }

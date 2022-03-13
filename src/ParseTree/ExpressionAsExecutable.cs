@@ -16,7 +16,7 @@
 
         public override void ResolveTypes(Resolver resolver)
         {
-            throw new System.NotImplementedException();
+            this.Expression.ResolveTypes(resolver);
         }
     }
 }

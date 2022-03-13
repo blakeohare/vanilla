@@ -33,7 +33,15 @@ namespace Vanilla.ParseTree
 
         public override void ResolveTypes(Resolver resolver)
         {
-            throw new System.NotImplementedException();
+            this.Condition.ResolveTypes(resolver);
+            foreach (Executable line in this.TrueCode)
+            {
+                line.ResolveTypes(resolver);
+            }
+            foreach (Executable line in this.FalseCode)
+            {
+                line.ResolveTypes(resolver);
+            }
         }
     }
 }

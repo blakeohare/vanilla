@@ -22,7 +22,8 @@
 
         public override void ResolveTypes(Resolver resolver)
         {
-            throw new System.NotImplementedException();
+            this.Root.ResolveTypes(resolver);
+            this.Index.ResolveTypes(resolver);
         }
     }
 }

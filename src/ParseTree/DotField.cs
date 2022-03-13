@@ -46,8 +46,21 @@
         {
             this.Root.ResolveTypes(resolver);
             Type rootType = this.Root.ResolvedType;
+            this.ResolvedType = this.GetPrimitiveFieldType(rootType, rootType.RootType + "." + this.FieldName);
+            this.ResolvedType.Resolve(resolver);
+        }
 
-            throw new System.NotImplementedException();
+        private Type GetPrimitiveFieldType(Type rootType, string id)
+        {
+            Type itemType = rootType.Generics.Length == 1 ? rootType.Generics[0] : null;
+            switch (id)
+            {
+                case "list.add": return Type.GetFunctionType(Type.VOID, new Type[] { itemType });
+                case "list.toArray": return Type.GetFunctionType(Type.GetArrayType(itemType), new Type[0]);
+
+                default:
+                    throw new ParserException(this.DotToken, "There is no field named " + id + " on type " + rootType.RootType + ".");
+            }
         }
     }
 }

@@ -49,7 +49,7 @@
 
         public override void ResolveTypes(Resolver resolver)
         {
-            throw new System.NotImplementedException();
+            throw new ParserException(this.FirstToken, "Type methods and system functions must be invoked and cannot be passed as function pointers.");
         }
     }
 }

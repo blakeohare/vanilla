@@ -36,7 +36,13 @@ namespace Vanilla.ParseTree
 
         public override void ResolveTypes(Resolver resolver)
         {
-            throw new System.NotImplementedException();
+            this.VarDeclaration.ResolveTypes(resolver);
+            this.StartExpression.ResolveTypes(resolver);
+            this.EndExpression.ResolveTypes(resolver);
+            foreach (Executable line in this.Code)
+            {
+                line.ResolveTypes(resolver);
+            }
         }
     }
 }
