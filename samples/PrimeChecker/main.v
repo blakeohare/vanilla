@@ -3,7 +3,7 @@ function:map<string, object> findPrimes(const:int upperLimit) {
     const:array<int> primes = generatePrimeList(1, upperLimit);
     const:map<string, object> output = map<string, object>.of();
     output["ok"] = true;
-    output["nums"] = array<object>.from(primes);
+    output["nums"] = array<object>.castFrom(primes);
     return output;
 }
 

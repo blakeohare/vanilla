@@ -23,9 +23,17 @@
         {
             if (this.InitialValue != null)
             {
-                this.InitialValue.ResolveVariables(resolver, scope);
+                this.InitialValue = this.InitialValue.ResolveVariables(resolver, scope);
             }
             scope.AddDefinition(this);
+        }
+
+        public override void ResolveTypes(Resolver resolver)
+        {
+            if (this.InitialValue != null)
+            {
+                this.InitialValue.ResolveTypes(resolver);
+            }
         }
     }
 }

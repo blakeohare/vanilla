@@ -30,5 +30,10 @@ namespace Vanilla.ParseTree
                 line.ResolveVariables(resolver, falseScope);
             }
         }
+
+        public override void ResolveTypes(Resolver resolver)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

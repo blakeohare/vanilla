@@ -22,5 +22,10 @@ namespace Vanilla.ParseTree
             }
             return this;
         }
+
+        public override void ResolveTypes(Resolver resolver)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

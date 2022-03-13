@@ -1,4 +1,6 @@
-﻿namespace Vanilla
+﻿using System.Collections.Generic;
+
+namespace Vanilla
 {
     internal class TypeParser
     {
@@ -64,6 +66,19 @@
                     if (valueType == null) return null;
                     if (!tokens.PopIfPresent(">")) return null;
                     return new Type() { FirstToken = firstToken, RootType = next, Generics = new Type[] { keyType, valueType } };
+
+                case "func":
+                    if (!tokens.PopIfPresent("<")) return null;
+                    List<Type> types = new List<Type>();
+                    Type returnType = this.TryParseTypeImpl();
+                    if (returnType == null) return null;
+                    types.Add(returnType);
+                    while (tokens.PopIfPresent(","))
+                    {
+                        Type argType = this.TryParseTypeImpl();
+                        types.Add(argType);
+                    }
+                    return new Type() { FirstToken = firstToken, RootType = next, Generics = types.ToArray() };
 
                 default:
                     // Yup, class names MUST begin with a capital letter

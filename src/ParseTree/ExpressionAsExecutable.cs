@@ -13,5 +13,10 @@
         {
             this.Expression = this.Expression.ResolveVariables(resolver, scope);
         }
+
+        public override void ResolveTypes(Resolver resolver)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

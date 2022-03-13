@@ -14,5 +14,10 @@
             this.Root = this.Root.ResolveVariables(resolver, scope);
             return this;
         }
+
+        public override void ResolveTypes(Resolver resolver)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

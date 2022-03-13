@@ -43,6 +43,7 @@ namespace Vanilla
             "field",
             "float",
             "for",
+            "func",
             "function",
             "if",
             "int",

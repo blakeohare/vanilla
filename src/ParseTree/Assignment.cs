@@ -18,5 +18,10 @@
             this.Value = this.Value.ResolveVariables(resolver, scope);
             this.Target = this.Target.ResolveVariables(resolver, scope);
         }
+
+        public override void ResolveTypes(Resolver resolver)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

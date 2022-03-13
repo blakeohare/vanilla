@@ -28,5 +28,10 @@
             }
             throw new System.NotImplementedException();
         }
+
+        public override void ResolveTypes(Resolver resolver)
+        {
+            this.ResolvedType = this.Declaration.Type;
+        }
     }
 }

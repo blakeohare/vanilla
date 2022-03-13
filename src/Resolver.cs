@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Vanilla.ParseTree;
 
@@ -33,10 +32,21 @@ namespace Vanilla
             return null;
         }
 
+        internal ClassDefinition GetClassByName(string name)
+        {
+            if (this.entityByName.ContainsKey(name))
+            {
+                return this.entityByName[name] as ClassDefinition;
+            }
+            return null;
+        }
+
         public void Resolve()
         {
             this.CreateEntityNameMapping();
             this.ResolveVariableDeclarations();
+            this.ResolveSignatureTypes();
+            this.ResolveTypes();
         }
 
         private void CreateEntityNameMapping()
@@ -82,6 +92,32 @@ namespace Vanilla
             foreach (FunctionDefinition fd in functions)
             {
                 fd.ResolveVariables(this);
+            }
+        }
+
+        private IList<FunctionDefinition> AllFunctionsIncludingNested()
+        {
+            List<FunctionDefinition> functions = new List<FunctionDefinition>(this.allFunctions);
+            foreach (ClassDefinition cd in this.allClasses)
+            {
+                functions.AddRange(cd.Members.OfType<FunctionDefinition>());
+            }
+            return functions;
+        }
+
+        private void ResolveSignatureTypes()
+        {
+            foreach (FunctionDefinition fd in AllFunctionsIncludingNested())
+            {
+                fd.ResolveSignatureTypes(this);
+            }
+        }
+
+        private void ResolveTypes()
+        {
+            foreach (FunctionDefinition fd in AllFunctionsIncludingNested())
+            {
+                fd.ResolveTypes(this);
             }
         }
     }

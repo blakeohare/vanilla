@@ -10,5 +10,6 @@
         }
 
         public abstract void ResolveVariables(Resolver resolver, LexicalScope scope);
+        public abstract void ResolveTypes(Resolver resolver);
     }
 }

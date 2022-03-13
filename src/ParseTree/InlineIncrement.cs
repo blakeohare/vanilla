@@ -18,5 +18,10 @@
         {
             throw new System.NotImplementedException();
         }
+
+        public override void ResolveTypes(Resolver resolver)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

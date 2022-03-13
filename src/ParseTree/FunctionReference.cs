@@ -13,5 +13,10 @@
         {
             return this;
         }
+
+        public override void ResolveTypes(Resolver resolver)
+        {
+            this.ResolvedType = this.FunctionDefinition.SignatureType;
+        }
     }
 }

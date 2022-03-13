@@ -1,4 +1,5 @@
-﻿using Vanilla.ParseTree;
+﻿using System.Collections.Generic;
+using Vanilla.ParseTree;
 
 namespace Vanilla
 {
@@ -9,14 +10,21 @@ namespace Vanilla
         public bool IsClass { get; set; }
         public Type[] Generics { get; set; }
         public ClassDefinition ResolvedClass { get; set; }
+        public bool IsResolved { get; set; }
 
         private static readonly Type[] EMPTY_GENERICS = new Type[0];
+        public static readonly Type INT = new Type() { IsResolved = true, RootType = "int" };
+        public static readonly Type BOOL = new Type() { IsResolved = true, RootType = "bool" };
+        public static readonly Type FLOAT = new Type() { IsResolved = true, RootType = "float" };
+        public static readonly Type STRING = new Type() { IsResolved = true, RootType = "string" };
+        public static readonly Type TYPE = new Type() { IsResolved = true, RootType = "type" };
 
         public Type()
         {
             this.Generics = EMPTY_GENERICS;
             this.IsClass = false;
             this.ResolvedClass = null;
+            this.IsResolved = false;
         }
 
         public override string ToString()
@@ -33,6 +41,50 @@ namespace Vanilla
                 value += ">";
             }
             return value + "'";
+        }
+
+        public static Type GetFunctionType(Type returnType, Type[] argTypes)
+        {
+            List<Type> generics = new List<Type>() { returnType };
+            generics.AddRange(argTypes);
+            return new Type() { FirstToken = null, Generics = generics.ToArray(), RootType = "func" };
+        }
+
+        public void Resolve(Resolver resolver)
+        {
+            if (this.IsResolved) return;
+            if (this.IsClass)
+            {
+                ClassDefinition cd = resolver.GetClassByName(this.RootType);
+                if (cd == null) throw new ParserException(this.FirstToken, "The type '" + this.RootType + "' could not be resolved.");
+                this.ResolvedClass = cd;
+            }
+            foreach (Type gen in this.Generics)
+            {
+                gen.Resolve(resolver);
+            }
+            this.IsResolved = true;
+        }
+
+        public bool AssignableFrom(Type otherType)
+        {
+            if (this.RootType == "void") return false;
+            if (otherType.RootType == "void") return false;
+            if (otherType == this) return true;
+            if (this.RootType == "object") return true;
+            if (otherType.RootType == "int" && this.RootType == "float") return true;
+            if (this.Generics.Length != otherType.Generics.Length) return false;
+            if (this.Generics.Length == 0)
+            {
+                return this.RootType == otherType.RootType;
+            }
+            if (this.IsClass != otherType.IsClass) return false;
+            if (this.IsClass)
+            {
+                throw new System.NotImplementedException();
+            }
+            if (otherType.RootType != this.RootType) return false;
+            throw new System.NotImplementedException();
         }
     }
 }
