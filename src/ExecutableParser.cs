@@ -135,7 +135,7 @@ namespace Vanilla
                 case ForLoopType.TRADITIONAL:
                     tokens.PopExpected(";");
                     Expression condition = null;
-                    if (tokens.PopIfPresent(";"))
+                    if (!tokens.PopIfPresent(";"))
                     {
                         condition = this.ExprParser.ParseExpression();
                         tokens.PopExpected(";");
@@ -155,7 +155,7 @@ namespace Vanilla
 
                 default: throw new Exception();
             }
-            
+
             throw new NotImplementedException();
         }
 
