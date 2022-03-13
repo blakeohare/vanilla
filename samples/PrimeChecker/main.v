@@ -14,7 +14,7 @@ function:array<int> generatePrimeList(const:int lowerBound, const:int upperBound
             results.add(i);
         }
     }
-return results.toArray();
+    return results.toArray();
 }
 
 function:bool isPrime(const:int value) {
