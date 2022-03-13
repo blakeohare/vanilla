@@ -13,5 +13,10 @@ namespace Vanilla.ParseTree
             this.ClassNameToken = classNameToken;
             this.Args = args.ToArray();
         }
+
+        public override Expression ResolveVariables(Resolver resolver, LexicalScope scope)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace Vanilla.ParseTree
 {
-    internal class Executable : Entity
+    internal abstract class Executable : Entity
     {
         public TopLevelEntity Owner { get; private set; }
 
@@ -8,5 +8,7 @@
         {
             this.Owner = owner;
         }
+
+        public abstract void ResolveVariables(Resolver resolver, LexicalScope scope);
     }
 }

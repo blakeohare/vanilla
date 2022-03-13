@@ -31,6 +31,9 @@ namespace Vanilla
                     entities.Add(ent);
                 }
             }
+
+            Resolver resolver = new Resolver(entities);
+            resolver.Resolve();
         }
     }
 }

@@ -8,5 +8,10 @@
         {
             this.Expression = expr;
         }
+
+        public override void ResolveVariables(Resolver resolver, LexicalScope scope)
+        {
+            this.Expression = this.Expression.ResolveVariables(resolver, scope);
+        }
     }
 }

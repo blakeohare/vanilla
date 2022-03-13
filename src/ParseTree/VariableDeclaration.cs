@@ -18,5 +18,14 @@
             this.AssignOp = assignOp;
             this.InitialValue = initialValue;
         }
+
+        public override void ResolveVariables(Resolver resolver, LexicalScope scope)
+        {
+            if (this.InitialValue != null)
+            {
+                this.InitialValue.ResolveVariables(resolver, scope);
+            }
+            scope.AddDefinition(this);
+        }
     }
 }

@@ -15,5 +15,20 @@ namespace Vanilla.ParseTree
             this.TrueCode = trueCode.ToArray();
             this.FalseCode = falseCode.ToArray();
         }
+
+        public override void ResolveVariables(Resolver resolver, LexicalScope scope)
+        {
+            this.Condition = this.Condition.ResolveVariables(resolver, scope);
+            LexicalScope trueScope = new LexicalScope(scope);
+            foreach (Executable line in this.TrueCode)
+            {
+                line.ResolveVariables(resolver, trueScope);
+            }
+            LexicalScope falseScope = new LexicalScope(scope);
+            foreach (Executable line in this.FalseCode)
+            {
+                line.ResolveVariables(resolver, falseScope);
+            }
+        }
     }
 }

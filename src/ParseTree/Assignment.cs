@@ -12,5 +12,11 @@
             this.Op = op;
             this.Value = value;
         }
+
+        public override void ResolveVariables(Resolver resolver, LexicalScope scope)
+        {
+            this.Value = this.Value.ResolveVariables(resolver, scope);
+            this.Target = this.Target.ResolveVariables(resolver, scope);
+        }
     }
 }

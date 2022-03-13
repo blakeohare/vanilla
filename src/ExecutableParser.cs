@@ -130,7 +130,7 @@ namespace Vanilla
                     Expression end = this.ExprParser.ParseExpression();
                     tokens.PopExpected(")");
                     code = this.ExecParser.ParseCodeBlock(owner, false);
-                    return new ForRangeLoop(forToken, owner, loopVarDecl, start, end, endQualifier.Value == "thru");
+                    return new ForRangeLoop(forToken, owner, loopVarDecl, start, end, endQualifier.Value == "thru", code);
 
                 case ForLoopType.TRADITIONAL:
                     tokens.PopExpected(";");

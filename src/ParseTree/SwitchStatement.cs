@@ -13,5 +13,10 @@ namespace Vanilla.ParseTree
             this.Condition = condition;
             this.Chunks = chunks.ToArray();
         }
+
+        public override void ResolveVariables(Resolver resolver, LexicalScope scope)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

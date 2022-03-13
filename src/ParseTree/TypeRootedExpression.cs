@@ -8,5 +8,10 @@
         {
             this.Type = type;
         }
+
+        public override Expression ResolveVariables(Resolver resolver, LexicalScope scope)
+        {
+            return this;
+        }
     }
 }

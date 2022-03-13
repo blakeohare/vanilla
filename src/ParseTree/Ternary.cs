@@ -12,5 +12,13 @@
             this.TrueValue = trueValue;
             this.FalseValue = falseValue;
         }
+
+        public override Expression ResolveVariables(Resolver resolver, LexicalScope scope)
+        {
+            this.Condition = this.Condition.ResolveVariables(resolver, scope);
+            this.TrueValue = this.TrueValue.ResolveVariables(resolver, scope);
+            this.FalseValue = this.FalseValue.ResolveVariables(resolver, scope);
+            return this;
+        }
     }
 }

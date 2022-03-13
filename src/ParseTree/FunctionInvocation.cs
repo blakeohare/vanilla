@@ -15,5 +15,15 @@ namespace Vanilla.ParseTree
             this.OpenParen = openParen;
             this.ArgList = argList.ToArray();
         }
+
+        public override Expression ResolveVariables(Resolver resolver, LexicalScope scope)
+        {
+            this.Root.ResolveVariables(resolver, scope);
+            foreach (Expression arg in this.ArgList)
+            {
+                arg.ResolveVariables(resolver, scope);
+            }
+            return this;
+        }
     }
 }

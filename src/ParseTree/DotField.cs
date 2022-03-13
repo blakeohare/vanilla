@@ -14,5 +14,11 @@
             this.FieldToken = fieldToken;
             this.FieldName = fieldToken.Value;
         }
+
+        public override Expression ResolveVariables(Resolver resolver, LexicalScope scope)
+        {
+            this.Root = this.Root.ResolveVariables(resolver, scope);
+            return this;
+        }
     }
 }

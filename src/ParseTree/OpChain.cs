@@ -13,5 +13,14 @@ namespace Vanilla.ParseTree
             this.Expressions = expressions.ToArray();
             this.Ops = ops.ToArray();
         }
+
+        public override Expression ResolveVariables(Resolver resolver, LexicalScope scope)
+        {
+            for (int i = 0; i < this.Expressions.Length; i++)
+            {
+                this.Expressions[i] = this.Expressions[i].ResolveVariables(resolver, scope);
+            }
+            return this;
+        }
     }
 }

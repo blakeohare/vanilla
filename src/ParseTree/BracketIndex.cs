@@ -12,5 +12,12 @@
             this.OpenBracket = openBracket;
             this.Index = index;
         }
+
+        public override Expression ResolveVariables(Resolver resolver, LexicalScope scope)
+        {
+            this.Root = this.Root.ResolveVariables(resolver, scope);
+            this.Index = this.Index.ResolveVariables(resolver, scope);
+            return this;
+        }
     }
 }

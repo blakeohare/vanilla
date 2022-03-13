@@ -12,5 +12,10 @@
             this.AsToken = asToken;
             this.TargetType = targetType;
         }
+
+        public override Expression ResolveVariables(Resolver resolver, LexicalScope scope)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

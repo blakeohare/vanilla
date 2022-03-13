@@ -16,5 +16,10 @@ namespace Vanilla.ParseTree
             this.Collection = collectionExpr;
             this.Code = code.ToArray();
         }
+
+        public override void ResolveVariables(Resolver resolver, LexicalScope scope)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

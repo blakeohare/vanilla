@@ -1,7 +1,9 @@
 ﻿namespace Vanilla.ParseTree
 {
-    internal class Expression : Entity
+    internal abstract class Expression : Entity
     {
         public Expression(Token firstToken) : base(firstToken) { }
+
+        public abstract Expression ResolveVariables(Resolver resolver, LexicalScope scope);
     }
 }

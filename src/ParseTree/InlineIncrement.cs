@@ -13,5 +13,10 @@
             this.IncrementToken = incrementToken;
             this.IsPrefix = isPrefix;
         }
+
+        public override Expression ResolveVariables(Resolver resolver, LexicalScope scope)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }
