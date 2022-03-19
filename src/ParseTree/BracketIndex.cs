@@ -34,17 +34,16 @@
 
                 case "map":
                     Type expectedKeyType = rootType.Generics[0];
-                    if (!rootType.Generics[0].AssignableFrom(keyType)) throw new ParserException(this.Index, "Cannot key into a map with this type. Expected type is " + expectedKeyType);
-                    this.ResolvedType = rootType.Generics[1];
-                    break;
+                    if (!expectedKeyType.AssignableFrom(keyType)) throw new ParserException(this.Index, "Cannot key into a map with this type. Expected type is " + expectedKeyType);
+                    return new MapAccess(this.Root, this.OpenBracket, this.Index);
+
                 case "string":
                     if (keyType.RootType != "int") throw new ParserException(this.Index, "Cannot index into a string with this type. Index must be an integer.");
-                    this.ResolvedType = Type.STRING;
-                    break;
+                    throw new System.NotImplementedException();
+
                 default:
                     throw new ParserException(this.OpenBracket, "Indexing is not available for this type.");
             }
-            return this;
         }
     }
 }

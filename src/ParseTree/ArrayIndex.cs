@@ -13,13 +13,13 @@ namespace Vanilla.ParseTree
             this.Root = root;
             this.BracketToken = bracketToken;
             this.Index = index;
+            this.ResolvedType = this.Root.ResolvedType.Generics[0];
         }
 
         public override Expression ResolveTypes(Resolver resolver)
         {
             // Generated as a result of type resolver, so children are already resolved.
-            this.ResolvedType = this.Root.ResolvedType.Generics[0];
-            return this;
+            throw new NotImplementedException();
         }
 
         public override Expression ResolveVariables(Resolver resolver, LexicalScope scope)

@@ -20,6 +20,8 @@ namespace Vanilla
         public static readonly Type TYPE = new Type() { IsResolved = true, RootType = "type" };
         public static readonly Type VOID = new Type() { IsResolved = true, RootType = "void" };
 
+        public bool IsArray { get { return this.RootType == "array"; } }
+
         public Type()
         {
             this.Generics = EMPTY_GENERICS;
