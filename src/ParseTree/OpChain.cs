@@ -23,11 +23,11 @@ namespace Vanilla.ParseTree
             return this;
         }
 
-        public override void ResolveTypes(Resolver resolver)
+        public override Expression ResolveTypes(Resolver resolver)
         {
-            foreach (Expression expression in this.Expressions)
+            for (int i = 0; i < this.Expressions.Length; i++)
             {
-                expression.ResolveTypes(resolver);
+                this.Expressions[i] = this.Expressions[i].ResolveTypes(resolver);
             }
 
             Type accType = this.Expressions[0].ResolvedType;
@@ -37,6 +37,7 @@ namespace Vanilla.ParseTree
             }
 
             this.ResolvedType = accType;
+            return this;
         }
 
         private Type CombineTypesWithOp(Type leftType, Token opToken, Type rightType)

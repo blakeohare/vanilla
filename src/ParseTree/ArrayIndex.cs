@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Vanilla.ParseTree
 {
@@ -17,10 +15,11 @@ namespace Vanilla.ParseTree
             this.Index = index;
         }
 
-        public override void ResolveTypes(Resolver resolver)
+        public override Expression ResolveTypes(Resolver resolver)
         {
             // Generated as a result of type resolver, so children are already resolved.
             this.ResolvedType = this.Root.ResolvedType.Generics[0];
+            return this;
         }
 
         public override Expression ResolveVariables(Resolver resolver, LexicalScope scope)

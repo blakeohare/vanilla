@@ -6,6 +6,6 @@
         public Expression(Token firstToken) : base(firstToken) { }
 
         public abstract Expression ResolveVariables(Resolver resolver, LexicalScope scope);
-        public abstract void ResolveTypes(Resolver resolver);
+        public abstract Expression ResolveTypes(Resolver resolver);
     }
 }

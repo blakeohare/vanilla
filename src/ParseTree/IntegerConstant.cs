@@ -7,6 +7,7 @@
         public IntegerConstant(Token token, int value) : base(token)
         {
             this.Value = value;
+            this.ResolvedType = Type.INT;
         }
 
         public override Expression ResolveVariables(Resolver resolver, LexicalScope scope)
@@ -14,9 +15,9 @@
             return this;
         }
 
-        public override void ResolveTypes(Resolver resolver)
+        public override Expression ResolveTypes(Resolver resolver)
         {
-            this.ResolvedType = Type.INT;
+            return this;
         }
     }
 }

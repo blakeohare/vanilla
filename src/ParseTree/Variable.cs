@@ -29,9 +29,10 @@
             throw new System.NotImplementedException();
         }
 
-        public override void ResolveTypes(Resolver resolver)
+        public override Expression ResolveTypes(Resolver resolver)
         {
             this.ResolvedType = this.Declaration.Type;
+            return this;
         }
     }
 }

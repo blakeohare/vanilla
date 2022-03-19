@@ -14,9 +14,10 @@
             return this;
         }
 
-        public override void ResolveTypes(Resolver resolver)
+        public override Expression ResolveTypes(Resolver resolver)
         {
             this.ResolvedType = Type.BOOL;
+            return this;
         }
     }
 }

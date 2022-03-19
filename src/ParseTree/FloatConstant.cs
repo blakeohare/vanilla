@@ -7,6 +7,7 @@
         public FloatConstant(Token token, double value) : base(token)
         {
             this.Value = value;
+            this.ResolvedType = Type.FLOAT;
         }
 
         public override Expression ResolveVariables(Resolver resolver, LexicalScope scope)
@@ -14,9 +15,9 @@
             return this;
         }
 
-        public override void ResolveTypes(Resolver resolver)
+        public override Expression ResolveTypes(Resolver resolver)
         {
-            throw new System.NotImplementedException();
+            return this;
         }
     }
 }

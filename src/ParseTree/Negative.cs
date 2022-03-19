@@ -15,7 +15,7 @@
             return this;
         }
 
-        public override void ResolveTypes(Resolver resolver)
+        public override Expression ResolveTypes(Resolver resolver)
         {
             throw new System.NotImplementedException();
         }

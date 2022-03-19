@@ -37,8 +37,8 @@ namespace Vanilla.ParseTree
         public override void ResolveTypes(Resolver resolver)
         {
             this.VarDeclaration.ResolveTypes(resolver);
-            this.StartExpression.ResolveTypes(resolver);
-            this.EndExpression.ResolveTypes(resolver);
+            this.StartExpression = this.StartExpression.ResolveTypes(resolver);
+            this.EndExpression = this.EndExpression.ResolveTypes(resolver);
             foreach (Executable line in this.Code)
             {
                 line.ResolveTypes(resolver);

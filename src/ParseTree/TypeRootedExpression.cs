@@ -14,10 +14,11 @@
             return this;
         }
 
-        public override void ResolveTypes(Resolver resolver)
+        public override Expression ResolveTypes(Resolver resolver)
         {
             this.Type.Resolve(resolver);
             this.ResolvedType = Type.TYPE;
+            return this;
         }
     }
 }

@@ -7,6 +7,7 @@
         public StringConstant(Token token, string value) : base(token)
         {
             this.Value = value;
+            this.ResolvedType = Type.STRING;
         }
 
         public override Expression ResolveVariables(Resolver resolver, LexicalScope scope)
@@ -14,9 +15,9 @@
             return this;
         }
 
-        public override void ResolveTypes(Resolver resolver)
+        public override Expression ResolveTypes(Resolver resolver)
         {
-            this.ResolvedType = Type.STRING;
+            return this;
         }
     }
 }

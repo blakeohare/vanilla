@@ -35,11 +35,11 @@ namespace Vanilla.ParseTree
         {
             for (int i = 0; i < this.ArgList.Length; i++)
             {
-                this.ArgList[i].ResolveTypes(resolver);
+                this.ArgList[i] = this.ArgList[i].ResolveTypes(resolver);
             }
         }
 
-        public override void ResolveTypes(Resolver resolver)
+        public override Expression ResolveTypes(Resolver resolver)
         {
             SystemFunction sf = this.Root as SystemFunction;
             if (sf != null)
@@ -50,7 +50,7 @@ namespace Vanilla.ParseTree
             }
             else
             {
-                this.Root.ResolveTypes(resolver);
+                this.Root = this.Root.ResolveTypes(resolver);
                 this.ResolveArgTypes(resolver);
             }
 
@@ -73,6 +73,7 @@ namespace Vanilla.ParseTree
             }
 
             this.ResolvedType = funcType.Generics[0];
+            return this;
         }
 
         private Type ResolveSystemFunctionType(SystemFunction sysFunc, Type[] argTypes)

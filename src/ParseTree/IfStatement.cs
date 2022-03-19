@@ -33,7 +33,7 @@ namespace Vanilla.ParseTree
 
         public override void ResolveTypes(Resolver resolver)
         {
-            this.Condition.ResolveTypes(resolver);
+            this.Condition = this.Condition.ResolveTypes(resolver);
             foreach (Executable line in this.TrueCode)
             {
                 line.ResolveTypes(resolver);

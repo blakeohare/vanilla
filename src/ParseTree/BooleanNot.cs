@@ -15,9 +15,11 @@
             return this;
         }
 
-        public override void ResolveTypes(Resolver resolver)
+        public override Expression ResolveTypes(Resolver resolver)
         {
-            throw new System.NotImplementedException();
+            this.Root = this.Root.ResolveTypes(resolver);
+            if (this.Root.ResolvedType.RootType != "bool") throw new ParserException(this, "! cannot be applied to this type.");
+            return this;
         }
     }
 }

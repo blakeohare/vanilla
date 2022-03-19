@@ -16,7 +16,7 @@
 
         public override void ResolveTypes(Resolver resolver)
         {
-            this.Expression.ResolveTypes(resolver);
+            this.Expression = this.Expression.ResolveTypes(resolver);
         }
     }
 }

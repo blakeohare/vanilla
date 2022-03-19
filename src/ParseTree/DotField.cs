@@ -42,12 +42,13 @@
             return new SystemFunction(this.Root.FirstToken, func, ((TypeRootedExpression)this.Root).Type, this.FieldToken);
         }
 
-        public override void ResolveTypes(Resolver resolver)
+        public override Expression ResolveTypes(Resolver resolver)
         {
-            this.Root.ResolveTypes(resolver);
+            this.Root = this.Root.ResolveTypes(resolver);
             Type rootType = this.Root.ResolvedType;
             this.ResolvedType = this.GetPrimitiveFieldType(rootType, rootType.RootType + "." + this.FieldName);
             this.ResolvedType.Resolve(resolver);
+            return this;
         }
 
         private Type GetPrimitiveFieldType(Type rootType, string id)

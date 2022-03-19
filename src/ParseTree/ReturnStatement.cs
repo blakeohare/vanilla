@@ -21,7 +21,7 @@
         {
             if (this.Value != null)
             {
-                this.Value.ResolveTypes(resolver);
+                this.Value = this.Value.ResolveTypes(resolver);
             }
         }
     }
