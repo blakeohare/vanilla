@@ -49,12 +49,25 @@ namespace Vanilla.Transpiler
             Append(NL);
         }
 
+        protected override void SerializeAssignment(Assignment asgn)
+        {
+            Append(CurrentTab);
+            SerializeExpression(asgn.Target);
+            Append(' ');
+            Append(asgn.Op.Value);
+            Append(' ');
+            SerializeExpression(asgn.Value);
+            Append(';');
+            Append(NL);
+        }
+
         protected override void SerializeExecutable(Executable ex)
         {
             if (standardWhitespaceEnabled) Append(CurrentTab);
             string name = ex.GetType().Name;
             switch (name)
             {
+                case "Assignment": this.SerializeAssignment((Assignment)ex); break;
                 case "VariableDeclaration": this.SerializeVariableDeclaration((VariableDeclaration)ex); break;
                 default: throw new System.NotImplementedException(name);
             }
@@ -77,11 +90,46 @@ namespace Vanilla.Transpiler
             if (standardWhitespaceEnabled) Append(';');
         }
 
+        protected override void SerializeSysFuncMapOf(Type keyType, Type valueType, Expression[] args)
+        {
+            Append("vutil_new_map('");
+            switch (keyType.RootType)
+            {
+                case "string": Append('S'); break;
+                case "int": Append('I'); break;
+                default: Append('P'); break;
+            }
+            Append("')");
+            for (int i = 0; i < args.Length; i += 2)
+            {
+                Expression key = args[i];
+                Expression value = args[i];
+                Append("->add_item(");
+                SerializeExpression(key);
+                Append(", ");
+                SerializeExpression(value);
+                Append(")");
+            }
+        }
+
         protected override void SerializeFunctionInvocation(FunctionInvocation inv)
         {
-            if (inv.Root is SystemFunction)
+            SystemFunction sf = inv.Root as SystemFunction;
+            if (sf != null)
             {
-                throw new System.NotImplementedException();
+                switch (sf.Name)
+                {
+                    case "map.of":
+                        {
+                            Type mapType = sf.ResolvedType.Generics[0];
+                            Type keyType = mapType.Generics[0];
+                            Type valueType = mapType.Generics[1];
+                            this.SerializeSysFuncMapOf(keyType, valueType, inv.ArgList);
+                        }
+                        return;
+                    default:
+                        throw new System.NotImplementedException();
+                }
             }
             else if (inv.Root is FunctionReference)
             {

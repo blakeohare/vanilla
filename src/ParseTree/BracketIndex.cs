@@ -24,6 +24,26 @@
         {
             this.Root.ResolveTypes(resolver);
             this.Index.ResolveTypes(resolver);
+            Type rootType = this.Root.ResolvedType;
+            Type keyType = this.Index.ResolvedType;
+            switch (this.Root.ResolvedType.RootType)
+            {
+                case "array":
+                    if (keyType.RootType != "int") throw new ParserException(this.Index, "Cannot index into an array with this type. Index must be an integer.");
+                    this.ResolvedType = rootType.Generics[0];
+                    break;
+                case "map":
+                    Type expectedKeyType = rootType.Generics[0];
+                    if (!rootType.Generics[0].AssignableFrom(keyType)) throw new ParserException(this.Index, "Cannot key into a map with this type. Expected type is " + expectedKeyType);
+                    this.ResolvedType = rootType.Generics[1];
+                    break;
+                case "string":
+                    if (keyType.RootType != "int") throw new ParserException(this.Index, "Cannot index into a string with this type. Index must be an integer.");
+                    this.ResolvedType = Type.STRING;
+                    break;
+                default:
+                    throw new ParserException(this.OpenBracket, "Indexing is not available for this type.");
+            }
         }
     }
 }

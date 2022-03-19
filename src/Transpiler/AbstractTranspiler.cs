@@ -77,6 +77,7 @@ namespace Vanilla.Transpiler
             return this.sb.ToString();
         }
 
+        protected abstract void SerializeAssignment(Assignment asgn);
         protected abstract void SerializeExecutable(Executable ex);
         protected abstract void SerializeFunction(FunctionDefinition fd);
         protected abstract void SerializeFunctionSignature(FunctionDefinition fd);
@@ -84,6 +85,7 @@ namespace Vanilla.Transpiler
         protected abstract void SerializeIntegerConstant(IntegerConstant ic);
         protected abstract void SerializeVariable(Variable vd);
         protected abstract void SerializeVariableDeclaration(VariableDeclaration vd);
+        protected abstract void SerializeSysFuncMapOf(Type keyType, Type valueType, Expression[] args);
 
         protected void SerializeExpression(Expression expr)
         {
@@ -92,7 +94,7 @@ namespace Vanilla.Transpiler
             {
                 case "FunctionInvocation": this.SerializeFunctionInvocation((FunctionInvocation)expr); break;
                 case "IntegerConstant": this.SerializeIntegerConstant((IntegerConstant)expr); break;
-                case "Variable": this.SerializeVariable((Variable)expr);break;
+                case "Variable": this.SerializeVariable((Variable)expr); break;
                 default: throw new NotImplementedException();
             }
         }
