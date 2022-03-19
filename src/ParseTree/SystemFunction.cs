@@ -5,7 +5,9 @@
         ARRAY_CAST_FROM,
         ARRAY_OF,
         FLOOR,
+        LIST_ADD,
         LIST_OF,
+        LIST_TO_ARRAY,
         MAP_OF,
         SQRT,
     }

@@ -28,6 +28,7 @@ namespace Vanilla.ParseTree
             {
                 throw new System.NotImplementedException();
             }
+
             return this;
         }
 
@@ -39,41 +40,109 @@ namespace Vanilla.ParseTree
             }
         }
 
+        private SystemFunction GetRootAsSystemFunction(string typeSignature, Expression fieldFreeRoot, Token fieldToken)
+        {
+            Type rootType = fieldFreeRoot.ResolvedType;
+            Token firstToken = fieldFreeRoot.FirstToken;
+            Type g1 = rootType.Generics.Length > 0 ? rootType.Generics[0] : null;
+
+            switch (typeSignature)
+            {
+                case "list.add":
+                    return new SystemFunction(firstToken, SystemFunctionType.LIST_ADD, Type.GetListType(rootType.Generics[0]), fieldToken)
+                    {
+                        ResolvedType = Type.GetFunctionType(Type.VOID, new Type[] { g1 }),
+                    };
+                default:
+                    throw new System.NotImplementedException();
+            }
+        }
+
         public override Expression ResolveTypes(Resolver resolver)
         {
-            SystemFunction sf = this.Root as SystemFunction;
-            if (sf != null)
+            this.ResolveArgTypes(resolver);
+
+            if (this.Root is DotField)
             {
-                this.ResolveArgTypes(resolver);
-                this.Root.ResolvedType = this.ResolveSystemFunctionType(sf, this.ArgList.Select(expr => expr.ResolvedType).ToArray());
-                this.Root.ResolvedType.Resolve(resolver);
+                DotField df = (DotField)this.Root;
+                string fieldName = df.FieldName;
+                df.Root = df.Root.ResolveTypes(resolver);
+                Type rootType = df.Root.ResolvedType;
+                string signature;
+                SystemFunctionInvocation sfi;
+                Type resolvedType;
+                if (df.Root is TypeRootedExpression)
+                {
+                    rootType = ((TypeRootedExpression)df.Root).Type;
+                }
+                signature = rootType.RootType + "." + fieldName;
+
+                switch (signature)
+                {
+                    case "array.castFrom":
+                        sfi = new SystemFunctionInvocation(this.FirstToken, SystemFunctionType.ARRAY_CAST_FROM, this.ArgList);
+                        resolvedType = rootType;
+                        break;
+
+                    case "list.of":
+                        sfi = new SystemFunctionInvocation(this.FirstToken, SystemFunctionType.LIST_OF, this.ArgList);
+                        resolvedType = rootType;
+                        break;
+
+                    case "map.of":
+                        sfi = new SystemFunctionInvocation(this.FirstToken, SystemFunctionType.MAP_OF, this.ArgList);
+                        resolvedType = rootType;
+                        break;
+
+                    case "list.add":
+                        sfi = new SystemFunctionInvocation(this.FirstToken, SystemFunctionType.LIST_ADD, df.Root, this.ArgList);
+                        resolvedType = Type.VOID;
+                        break;
+
+                    case "list.toArray":
+                        sfi = new SystemFunctionInvocation(this.FirstToken, SystemFunctionType.LIST_TO_ARRAY, df.Root, this.ArgList);
+                        resolvedType = Type.GetArrayType(rootType.Generics[0]);
+                        break;
+
+                    default: throw new System.NotImplementedException();
+                }
+
+                sfi.ResolvedType = resolvedType;
+                sfi.EnsureArgsCompatible();
+                return sfi;
+            }
+            else if (this.Root is SystemFunction)
+            {
+                string name = ((SystemFunction)this.Root).Name;
+                SystemFunctionInvocation sfi;
+                switch (name)
+                {
+                    case "sqrt":
+                        sfi = new SystemFunctionInvocation(this.FirstToken, SystemFunctionType.SQRT, this.ArgList);
+                        sfi.ResolvedType = Type.FLOAT;
+                        break;
+
+                    case "floor":
+                        if (this.ArgList[0].ResolvedType.IsInteger) throw new ParserException(this, "$floor was invoked on an integer type. There is need to do this.");
+                        sfi = new SystemFunctionInvocation(this.FirstToken, SystemFunctionType.FLOOR, this.ArgList);
+                        sfi.ResolvedType = Type.INT;
+                        break;
+
+                    default:
+                        throw new ParserException(this, "Unknown system function: $" + name);
+                }
+                sfi.EnsureArgsCompatible();
+                return sfi;
+            }
+            else if (this.Root is FunctionReference)
+            {
+                this.Root = this.Root.ResolveTypes(resolver);
+                return new LocalFunctionInvocation((FunctionReference)this.Root, this.ArgList);
             }
             else
             {
-                this.Root = this.Root.ResolveTypes(resolver);
-                this.ResolveArgTypes(resolver);
+                throw new System.NotImplementedException();
             }
-
-            Type funcType = this.Root.ResolvedType;
-            if (funcType.RootType != "func") throw new ParserException(this.Root.FirstToken, "This expression cannot be invoked like a function.");
-            int expectedArgCount = funcType.Generics.Length - 1;
-            int actualArgCount = this.ArgList.Length;
-            if (expectedArgCount != actualArgCount) throw new ParserException(this.OpenParen, "This function has the wrong number of arguments. Expected " + expectedArgCount + " but found " + actualArgCount + ".");
-
-            for (int i = 0; i < this.ArgList.Length; i++)
-            {
-                Type actualType = this.ArgList[i].ResolvedType;
-                Type expectedType = funcType.Generics[i + 1];
-                if (!expectedType.AssignableFrom(actualType))
-                {
-                    throw new ParserException(
-                        this.ArgList[i].FirstToken,
-                        "Incorrect argument type. Expected '" + expectedType.ToString() + "' but received '" + actualType.ToString() + "' in argument " + (i + 1));
-                }
-            }
-
-            this.ResolvedType = funcType.Generics[0];
-            return this;
         }
 
         private Type ResolveSystemFunctionType(SystemFunction sysFunc, Type[] argTypes)
@@ -125,7 +194,6 @@ namespace Vanilla.ParseTree
 
                 default: throw new System.NotImplementedException();
             }
-            
         }
 
         private void EnsureArgCount(int argc)

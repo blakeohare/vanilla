@@ -2,7 +2,7 @@
 {
     internal class DotField : Expression
     {
-        public Expression Root { get; private set; }
+        public Expression Root { get; set; }
         public Token DotToken { get; private set; }
         public Token FieldToken { get; private set; }
         public string FieldName { get; private set; }
@@ -19,6 +19,18 @@
         {
             this.Root = this.Root.ResolveVariables(resolver, scope);
 
+            return this;
+        }
+
+        private SystemFunction CreateTypeMethod(SystemFunctionType func)
+        {
+            return new SystemFunction(this.Root.FirstToken, func, ((TypeRootedExpression)this.Root).Type, this.FieldToken);
+        }
+
+        public override Expression ResolveTypes(Resolver resolver)
+        {
+            this.Root = this.Root.ResolveTypes(resolver);
+
             if (this.Root is TypeRootedExpression)
             {
                 Type rootType = ((TypeRootedExpression)this.Root).Type;
@@ -33,21 +45,12 @@
                         throw new ParserException(this.DotToken, "The type '" + rootType + "' does not have a field named '" + this.FieldName + "'.");
                 }
             }
-
-            return this;
-        }
-
-        private SystemFunction CreateTypeMethod(SystemFunctionType func)
-        {
-            return new SystemFunction(this.Root.FirstToken, func, ((TypeRootedExpression)this.Root).Type, this.FieldToken);
-        }
-
-        public override Expression ResolveTypes(Resolver resolver)
-        {
-            this.Root = this.Root.ResolveTypes(resolver);
-            Type rootType = this.Root.ResolvedType;
-            this.ResolvedType = this.GetPrimitiveFieldType(rootType, rootType.RootType + "." + this.FieldName);
-            this.ResolvedType.Resolve(resolver);
+            else
+            {
+                Type rootType = this.Root.ResolvedType;
+                this.ResolvedType = this.GetPrimitiveFieldType(rootType, rootType.RootType + "." + this.FieldName);
+                this.ResolvedType.Resolve(resolver);
+            }
             return this;
         }
 

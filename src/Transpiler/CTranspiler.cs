@@ -327,5 +327,33 @@ namespace Vanilla.Transpiler
             SerializeExpression(exex.Expression);
             ApplyExecSuffix();
         }
+
+        protected override void SerializeLocalFunctionInvocation(LocalFunctionInvocation lfi)
+        {
+            Append(lfi.FuncRef.FunctionDefinition.Name);
+            Append('(');
+            for (int i = 0; i < lfi.ArgList.Length; i++)
+            {
+                if (i > 0) Append(", ");
+                SerializeExpression(lfi.ArgList[i]);
+            }
+            Append(')');
+        }
+
+        protected override void SerializeSysFuncListAdd(Type itemType, Expression listExpr, Expression itemExpr)
+        {
+            Append("vutil_list_add(");
+            SerializeExpression(listExpr);
+            Append(", ");
+            SerializeExpression(itemExpr);
+            Append(')');
+        }
+
+        protected override void SerializeSysFuncListToArray(Type itemType, Expression listExpr)
+        {
+            Append("vutil_list_clone(");
+            SerializeExpression(listExpr);
+            Append(')');
+        }
     }
 }

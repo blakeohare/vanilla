@@ -21,6 +21,13 @@ namespace Vanilla
         public static readonly Type VOID = new Type() { IsResolved = true, RootType = "void" };
 
         public bool IsArray { get { return this.RootType == "array"; } }
+        public bool IsList { get { return this.RootType == "list"; } }
+        public bool IsNumeric { get { return this.RootType == "int" || this.RootType == "float"; } }
+        public bool IsInteger { get { return this.RootType == "int"; } }
+
+        public Type ItemType { get { return this.Generics.Length > 0 ? this.Generics[0] : null; } }
+        public Type KeyType { get { return this.ItemType; } }
+        public Type ValueType { get { return this.Generics.Length > 1 ? this.Generics[1] : null; } }
 
         public Type()
         {
@@ -53,9 +60,19 @@ namespace Vanilla
             return new Type() { FirstToken = null, Generics = generics.ToArray(), RootType = "func" };
         }
 
+        public static Type GetListType(Type itemType)
+        {
+            return new Type() { FirstToken = null, Generics = new Type[] { itemType }, RootType = "list" };
+        }
+
         public static Type GetArrayType(Type itemType)
         {
             return new Type() { FirstToken = null, Generics = new Type[] { itemType }, RootType = "array" };
+        }
+
+        public static Type GetMapType(Type keyType, Type valueType)
+        {
+            return new Type() { FirstToken = null, Generics = new Type[] { keyType, valueType }, RootType = "map" };
         }
 
         public void Resolve(Resolver resolver)
