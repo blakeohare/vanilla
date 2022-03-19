@@ -14,6 +14,25 @@ namespace Vanilla.Transpiler
             this.RequiresSignatureDeclaration = true;
         }
 
+        private void EnsureUsingWrap(bool useWrap)
+        {
+            if (!useWrap) throw new System.Exception("Not using wrap here doesn't make sense.");
+        }
+
+        private void ApplyUnwrapPrefix(Expression expression, bool useWrap)
+        {
+            if (useWrap) return;
+            Type outgoingType = expression.ResolvedType;
+            // TODO: implement this
+        }
+
+        private void ApplyUnwrapSuffix(Expression expression, bool useWrap)
+        {
+            if (useWrap) return;
+            Type outgoingType = expression.ResolvedType;
+            // TODO: implement this
+        }
+
         private void ApplyExecPrefix()
         {
             if (standardWhitespaceEnabled)
@@ -73,11 +92,11 @@ namespace Vanilla.Transpiler
         protected override void SerializeAssignment(Assignment asgn)
         {
             ApplyExecPrefix();
-            SerializeExpression(asgn.Target);
+            SerializeExpression(asgn.Target, false); // This is completely wrong
             Append(' ');
             Append(asgn.Op.Value);
             Append(' ');
-            SerializeExpression(asgn.Value);
+            SerializeExpression(asgn.Value, true);
             ApplyExecSuffix();
         }
 
@@ -93,13 +112,15 @@ namespace Vanilla.Transpiler
             else
             {
                 Append(" = ");
-                SerializeExpression(vd.InitialValue);
+                SerializeExpression(vd.InitialValue, true);
             }
             ApplyExecSuffix();
         }
 
-        protected override void SerializeSysFuncMapOf(Type keyType, Type valueType, Expression[] args)
+        protected override void SerializeSysFuncMapOf(Type keyType, Type valueType, Expression[] args, bool useWrap)
         {
+            EnsureUsingWrap(useWrap);
+
             Append("vutil_new_map('");
             switch (keyType.RootType)
             {
@@ -113,14 +134,14 @@ namespace Vanilla.Transpiler
                 Expression key = args[i];
                 Expression value = args[i];
                 Append("->add_item(");
-                SerializeExpression(key);
+                SerializeExpression(key, true);
                 Append(", ");
-                SerializeExpression(value);
+                SerializeExpression(value, true);
                 Append(")");
             }
         }
 
-        protected override void SerializeBasicFunctionInvocation(Expression root, Expression[] args)
+        protected override void SerializeBasicFunctionInvocation(Expression root, Expression[] args, bool useWrap)
         {
             if (root is FunctionReference)
             {
@@ -128,7 +149,7 @@ namespace Vanilla.Transpiler
                 Append('(');
                 for (int i = 0; i < args.Length; i++)
                 {
-                    this.SerializeExpression(args[i]);
+                    this.SerializeExpression(args[i], true);
                 }
                 Append(')');
             }
@@ -138,27 +159,39 @@ namespace Vanilla.Transpiler
             }
         }
 
-        protected override void SerializeIntegerConstant(IntegerConstant ic)
+        protected override void SerializeIntegerConstant(IntegerConstant ic, bool useWrap)
         {
-            Append("" + ic.Value);
+            if (useWrap)
+            {
+                Append("vutil_get_int(vctx, " + ic.Value + ")");
+            }
+            else
+            {
+                Append("" + ic.Value);
+            }
         }
 
-        protected override void SerializeVariable(Variable vd)
+        protected override void SerializeVariable(Variable vd, bool useWrap)
         {
+            ApplyUnwrapPrefix(vd, useWrap);
             Append(vd.Name);
+            ApplyUnwrapSuffix(vd, useWrap);
         }
 
-        protected override void SerializeMapAccess(MapAccess ma)
+        protected override void SerializeMapAccess(MapAccess ma, bool useWrap)
         {
+            ApplyUnwrapPrefix(ma, useWrap);
             Append("vutil_map_get_unsafe(");
-            SerializeExpression(ma.Root);
+            SerializeExpression(ma.Root, true);
             Append(", ");
-            SerializeExpression(ma.Key);
+            SerializeExpression(ma.Key, true);
             Append(")");
+            ApplyUnwrapSuffix(ma, useWrap);
         }
 
-        protected override void SerializeStringConstant(StringConstant sc)
+        protected override void SerializeStringConstant(StringConstant sc, bool useWrap)
         {
+            ApplyUnwrapPrefix(sc, useWrap);
             Append("vctx->string_table[");
             if (!stringTableId.ContainsKey(sc.Value))
             {
@@ -166,18 +199,22 @@ namespace Vanilla.Transpiler
             }
             Append(stringTableId[sc.Value] + "");
             Append("]");
+            ApplyUnwrapSuffix(sc, useWrap);
         }
 
-        protected override void SerializeBooleanConstant(BooleanConstant bc)
+        protected override void SerializeBooleanConstant(BooleanConstant bc, bool useWrap)
         {
+            ApplyUnwrapPrefix(bc, useWrap);
             Append("vctx->");
             Append(bc.Value ? "const_true" : "const_false");
+            ApplyUnwrapSuffix(bc, useWrap);
         }
 
-        protected override void SerializeSysFuncArrayCastFrom(Type targetItemType, Type sourceItemType, bool isArray, Expression originalCollection)
+        protected override void SerializeSysFuncArrayCastFrom(Type targetItemType, Type sourceItemType, bool isArray, Expression originalCollection, bool useWrap)
         {
+            EnsureUsingWrap(useWrap);
             Append("vutil_list_clone(");
-            SerializeExpression(originalCollection);
+            SerializeExpression(originalCollection, true);
             Append(")");
         }
 
@@ -188,13 +225,15 @@ namespace Vanilla.Transpiler
             if (rs.Value != null)
             {
                 Append(' ');
-                SerializeExpression(rs.Value);
+                SerializeExpression(rs.Value, true);
             }
             ApplyExecSuffix();
         }
 
-        protected override void SerializeSysFuncListOf(Type itemType, Expression[] args)
+        protected override void SerializeSysFuncListOf(Type itemType, Expression[] args, bool useWrap)
         {
+            EnsureUsingWrap(useWrap);
+
             // lol
             foreach (Expression arg in args)
             {
@@ -204,7 +243,7 @@ namespace Vanilla.Transpiler
             foreach (Expression arg in args)
             {
                 Append(", ");
-                SerializeExpression(arg);
+                SerializeExpression(arg, true);
                 Append(')');
             }
         }
@@ -219,15 +258,15 @@ namespace Vanilla.Transpiler
             ApplyExecPrefix();
             Append("int ");
             Append(startVarName);
-            Append(" = vutil_value_int(");
-            SerializeExpression(frl.StartExpression);
+            Append(" = ");
+            SerializeExpression(frl.StartExpression, false);
             ApplyExecSuffix();
 
             ApplyExecPrefix();
             Append("int ");
             Append(endVarName);
-            Append(" = vutil_value_int(");
-            SerializeExpression(frl.EndExpression);
+            Append(" = ");
+            SerializeExpression(frl.EndExpression, false);
             ApplyExecSuffix();
 
             ApplyExecPrefix();
@@ -292,8 +331,8 @@ namespace Vanilla.Transpiler
         private void SerializeIfStatement(IfStatement ifst, bool isNested)
         {
             if (!isNested) ApplyExecPrefix();
-            Append("if (vutil_value_bool(");
-            SerializeExpression(ifst.Condition);
+            Append("if (");
+            SerializeExpression(ifst.Condition, false);
             Append(") {");
             Append(NL);
             this.TabLevel++;
@@ -324,35 +363,39 @@ namespace Vanilla.Transpiler
         protected override void SerializeExpressionAsExecutable(ExpressionAsExecutable exex)
         {
             ApplyExecPrefix();
-            SerializeExpression(exex.Expression);
+            SerializeExpression(exex.Expression, true);
             ApplyExecSuffix();
         }
 
-        protected override void SerializeLocalFunctionInvocation(LocalFunctionInvocation lfi)
+        protected override void SerializeLocalFunctionInvocation(LocalFunctionInvocation lfi, bool useWrap)
         {
+            ApplyUnwrapPrefix(lfi, useWrap);
             Append(lfi.FuncRef.FunctionDefinition.Name);
             Append('(');
             for (int i = 0; i < lfi.ArgList.Length; i++)
             {
                 if (i > 0) Append(", ");
-                SerializeExpression(lfi.ArgList[i]);
+                SerializeExpression(lfi.ArgList[i], true);
             }
             Append(')');
+            ApplyUnwrapSuffix(lfi, useWrap);
         }
 
-        protected override void SerializeSysFuncListAdd(Type itemType, Expression listExpr, Expression itemExpr)
+        protected override void SerializeSysFuncListAdd(Type itemType, Expression listExpr, Expression itemExpr, bool useWrap)
         {
+            EnsureUsingWrap(useWrap); // void
             Append("vutil_list_add(");
-            SerializeExpression(listExpr);
+            SerializeExpression(listExpr, true);
             Append(", ");
-            SerializeExpression(itemExpr);
+            SerializeExpression(itemExpr, true);
             Append(')');
         }
 
-        protected override void SerializeSysFuncListToArray(Type itemType, Expression listExpr)
+        protected override void SerializeSysFuncListToArray(Type itemType, Expression listExpr, bool useWrap)
         {
+            EnsureUsingWrap(useWrap);
             Append("vutil_list_clone(");
-            SerializeExpression(listExpr);
+            SerializeExpression(listExpr, true);
             Append(')');
         }
     }
