@@ -37,7 +37,99 @@ namespace Vanilla.ParseTree
             }
 
             this.ResolvedType = accType;
-            return this;
+
+            return this.GenerateMoreSpecificParseNode();
+        }
+
+        private enum OpGroup
+        {
+            PLUS,
+            MULTIPLY,
+            EQUALITY,
+            INEQUALITY,
+            BIT_SHIFT,
+            BIT_MASK,
+            BOOL_COMB,
+        }
+
+        private static Dictionary<string, OpGroup> opGroupsByToken = new Dictionary<string, OpGroup>() {
+            { "+", OpGroup.PLUS },
+            { "-", OpGroup.PLUS },
+            { "*", OpGroup.MULTIPLY },
+            { "/", OpGroup.MULTIPLY },
+            { "%", OpGroup.MULTIPLY },
+            { "==", OpGroup.EQUALITY },
+            { "!=", OpGroup.EQUALITY },
+            { "<", OpGroup.INEQUALITY },
+            { ">", OpGroup.INEQUALITY },
+            { "<=", OpGroup.INEQUALITY },
+            { ">=", OpGroup.INEQUALITY },
+            { "<<", OpGroup.BIT_SHIFT },
+            { ">>", OpGroup.BIT_SHIFT },
+            { "&", OpGroup.BIT_MASK },
+            { "|", OpGroup.BIT_MASK },
+            { "^", OpGroup.BIT_MASK },
+            { "&&", OpGroup.BOOL_COMB },
+            { "||", OpGroup.BOOL_COMB },
+        };
+
+        private Expression GenerateMoreSpecificParseNode()
+        {
+            OpGroup group = opGroupsByToken[this.Ops[0].Value];
+            Type[] types = this.Expressions.Select(e => e.ResolvedType).ToArray();
+
+            if (group == OpGroup.PLUS)
+            {
+                int firstString = -1;
+                for (int i = 0; i < types.Length; i++)
+                {
+                    if (types[i].IsString)
+                    {
+                        firstString = i;
+                        break;
+                    }
+                }
+
+                if (firstString != -1)
+                {
+                    if (firstString < 2)
+                    {
+                        return new StringConcatChain(this.FirstToken, this.Expressions);
+                    }
+                    else
+                    {
+                        List<Expression> preMathExpr = new List<Expression>() { this.Expressions[0] };
+                        List<Token> mathOps = new List<Token>();
+                        for (int i = 1; i < firstString; i++)
+                        {
+                            preMathExpr.Add(this.Expressions[i]);
+                            mathOps.Add(this.Ops[i - 1]);
+                        }
+                        OpChain subOpChain = new OpChain(preMathExpr, mathOps);
+                        Expression[] strPieces = new List<Expression>() { subOpChain }.Concat(this.Expressions.Skip(firstString)).ToArray();
+
+                        return new StringConcatChain(this.FirstToken, strPieces);
+                    }
+                }
+            }
+
+            if (this.Expressions.Length > 2 && (group == OpGroup.INEQUALITY || group == OpGroup.EQUALITY))
+            {
+                throw new ParserException(this, "Cannot use comparisons in a series of more than two expressions.");
+            }
+
+            if (group == OpGroup.MULTIPLY)
+            {
+                Expression innermost = new ArithmeticPairOp(this.Expressions[0], this.Ops[0], this.Expressions[1]);
+                
+                for (int i = 2; i < this.Expressions.Length; i++)
+                {
+                    innermost = new ArithmeticPairOp(innermost, this.Ops[i - 1], this.Expressions[i]);
+                }
+                return innermost;
+            }
+
+            return this; // I think everything else is fine...I think
         }
 
         private Type CombineTypesWithOp(Type leftType, Token opToken, Type rightType)
