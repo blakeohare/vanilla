@@ -19,13 +19,33 @@ namespace Vanilla.Transpiler
         {
             string destDir = verifiedDestinationPath;
             string outputFile = this.GenerateMainFile();
-            outputFile = "#include \"gen_util.h\"\n\n" + outputFile;
+            List<string> outputFilePieces = new List<string>() { "#include \"gen_util.h\"", "" };
+
+            string[] stringTableMembers = new string[] { "Example...", "   ...string table...", "      ...strings!" };
+
+            outputFilePieces.AddRange(new string[] {
+                "VContext* create_context() {",
+                "    VContext* vctx = vutil_initialize_context(" + stringTableMembers.Length + ");",
+            });
+            for (int i = 0; i < stringTableMembers.Length; i++)
+            {
+                string escapedString = '"' + stringTableMembers[i].Replace("\"", "\\\"") + '"'; // TODO: This is a hack just to get it compiling. Need to escape strings with LATIN-only characters. Then need to create an alternative factory method for strings with special characters.
+                outputFilePieces.Add("    vctx->string_table[" + i + "] = vutil_get_string_from_chars(" + escapedString + ");");
+            }
+            outputFilePieces.Add("    return vctx;");
+            outputFilePieces.Add("}");
+
+            outputFilePieces.Add("");
+            outputFilePieces.Add(outputFile);
+
+            outputFile = string.Join('\n', outputFilePieces);
+
             System.IO.File.WriteAllText(System.IO.Path.Combine(destDir, "gen.h"), outputFile);
 
             string[] headerFileContent = new string[] {
+                "value.h",
+                "vcontext.h",
                 "util.h",
-                "list.h",
-                "value.h"
             }.Select(name => Resources.GetResourceText("Transpiler/Support/C/" + name)).ToArray();
 
             System.IO.File.WriteAllText(System.IO.Path.Combine(destDir, "gen_util.h"), string.Join("\n\n", headerFileContent));
@@ -72,10 +92,10 @@ namespace Vanilla.Transpiler
             Append(CurrentTab);
             Append("Value* fn_");
             Append(fd.Name);
-            Append('(');
+            Append("(VContext* vctx");
             for (int i = 0; i < fd.Args.Length; i++)
             {
-                if (i > 0) Append(", ");
+                Append(", ");
                 Append("Value* ");
                 Append(fd.Args[i].Name);
             }
@@ -89,10 +109,10 @@ namespace Vanilla.Transpiler
             Append(CurrentTab);
             Append("Value* fn_");
             Append(fd.Name);
-            Append('(');
+            Append("(VContext* vctx");
             for (int i = 0; i < fd.Args.Length; i++)
             {
-                if (i > 0) Append(", ");
+                Append(", ");
                 Append("Value* ");
                 Append(fd.Args[i].Name);
             }
@@ -443,10 +463,10 @@ namespace Vanilla.Transpiler
         {
             ApplyUnwrapPrefix(lfi, useWrap);
             Append(lfi.FuncRef.FunctionDefinition.Name);
-            Append('(');
+            Append("(vctx");
             for (int i = 0; i < lfi.ArgList.Length; i++)
             {
-                if (i > 0) Append(", ");
+                Append(", ");
                 SerializeExpression(lfi.ArgList[i], true);
             }
             Append(')');
