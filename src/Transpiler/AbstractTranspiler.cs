@@ -33,6 +33,8 @@ namespace Vanilla.Transpiler
             }
         }
 
+        public abstract void EmitFiles(string verifiedDestinationPath);
+
         public AbstractTranspiler Append(string s)
         {
             this.sb.Append(s);
@@ -55,7 +57,7 @@ namespace Vanilla.Transpiler
             this.tabs.Add("");
         }
 
-        public string GenerateFile()
+        public string GenerateMainFile()
         {
             ClassDefinition[] classes = GetClassesInDependencyOrder(bundle);
             FunctionDefinition[] functions = bundle.FunctionDefinitions;

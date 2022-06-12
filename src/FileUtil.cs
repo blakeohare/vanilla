@@ -5,6 +5,19 @@ namespace Vanilla
 {
     internal static class FileUtil
     {
+        public static void EnsureDirectoryExists(string path)
+        {
+            string absPath = NormalizeToAbsolute(path);
+            EnsureDirExistsImpl(absPath);
+        }
+
+        private static void EnsureDirExistsImpl(string path)
+        {
+            if (System.IO.Directory.Exists(path)) return;
+            EnsureDirExistsImpl(System.IO.Path.GetDirectoryName(path));
+            System.IO.Directory.CreateDirectory(path);
+        }
+
         public static string NormalizeToAbsolute(string path)
         {
             if (path.Length >= 2 && path[1] != ':')

@@ -1,8 +1,6 @@
-﻿using System;
-
-namespace Vanilla
+﻿namespace Vanilla
 {
-    internal class ParserException : Exception
+    internal class ParserException : BuildException
     {
         public ParserException(string filename, string message) : base(filename + ": " + message) { }
         public ParserException(Token token, string message) : base(ConstructMessagePrefixFromToken(token) + message) { }

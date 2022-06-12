@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Vanilla.ParseTree;
 
 namespace Vanilla.Transpiler
@@ -12,6 +13,22 @@ namespace Vanilla.Transpiler
         public CTranspiler(ParseBundle bundle) : base(bundle)
         {
             this.RequiresSignatureDeclaration = true;
+        }
+
+        public override void EmitFiles(string verifiedDestinationPath)
+        {
+            string destDir = verifiedDestinationPath;
+            string outputFile = this.GenerateMainFile();
+            outputFile = "#include \"gen_util.h\"\n\n" + outputFile;
+            System.IO.File.WriteAllText(System.IO.Path.Combine(destDir, "gen.h"), outputFile);
+
+            string[] headerFileContent = new string[] {
+                "util.h",
+                "list.h",
+                "value.h"
+            }.Select(name => Resources.GetResourceText("Transpiler/Support/C/" + name)).ToArray();
+
+            System.IO.File.WriteAllText(System.IO.Path.Combine(destDir, "gen_util.h"), string.Join("\n\n", headerFileContent));
         }
 
         private void EnsureUsingWrap(bool useWrap)

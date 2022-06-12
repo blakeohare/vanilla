@@ -6,15 +6,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Transpiler\Support\C\header.h" />
-    <None Remove="Transpiler\Support\C\list.h" />
-    <None Remove="Transpiler\Support\C\value.h" />
+    <None Remove="Transpiler\Support\C\*.h" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Transpiler\Support\C\header.h" />
-    <EmbeddedResource Include="Transpiler\Support\C\list.h" />
-    <EmbeddedResource Include="Transpiler\Support\C\value.h" />
+    <EmbeddedResource Include="Transpiler\Support\C\*.h" />
   </ItemGroup>
 
 </Project>
