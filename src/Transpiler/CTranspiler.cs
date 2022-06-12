@@ -91,12 +91,35 @@ namespace Vanilla.Transpiler
 
         protected override void SerializeAssignment(Assignment asgn)
         {
+            string op = asgn.Op.Value;
+
             ApplyExecPrefix();
-            SerializeExpression(asgn.Target, false); // This is completely wrong
-            Append(' ');
-            Append(asgn.Op.Value);
-            Append(' ');
-            SerializeExpression(asgn.Value, true);
+            if (asgn.Target is Variable)
+            {
+                // TODO: resolver should create lightweight variables that store only native values when resolving variable information
+                Variable v = (Variable)asgn.Target;
+                Append(v.Name);
+                Append(" " + op + " ");
+                SerializeExpression(asgn.Value, true);
+            }
+            else if (asgn.Target is MapAccess)
+            {
+                if (op != "=") throw new System.NotImplementedException(); // TODO: temporary storage of root expression and key computation if not a direct variable or constants.
+
+                MapAccess ma = (MapAccess)asgn.Target;
+                Expression key = ma.Key;
+                Append(key.ResolvedType.IsString ? "vutil_map_set_str(" : "vutil_map_set_int(");
+                SerializeExpression(ma.Root, true);
+                Append(", ");
+                SerializeExpression(key, true);
+                Append(", ");
+                SerializeExpression(asgn.Value, true);
+                Append(')');
+            }
+            else
+            {
+                throw new System.NotImplementedException();
+            }
             ApplyExecSuffix();
         }
 
