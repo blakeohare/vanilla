@@ -33,7 +33,9 @@ namespace Vanilla.ParseTree
             Type accType = this.Expressions[0].ResolvedType;
             for (int i = 0; i < this.Ops.Length; i++)
             {
-                accType = this.CombineTypesWithOp(accType, this.Ops[i], this.Expressions[i + 1].ResolvedType);
+                Type rightType = this.Expressions[i + 1].ResolvedType;
+                Token op = this.Ops[i];
+                accType = this.CombineTypesWithOp(accType, op, rightType);
             }
 
             this.ResolvedType = accType;
@@ -75,6 +77,8 @@ namespace Vanilla.ParseTree
 
         private Expression GenerateMoreSpecificParseNode()
         {
+            if (this.Ops.Length == 0) throw new System.Exception(); // something terrible has happened.
+
             OpGroup group = opGroupsByToken[this.Ops[0].Value];
             Type[] types = this.Expressions.Select(e => e.ResolvedType).ToArray();
 
@@ -113,9 +117,13 @@ namespace Vanilla.ParseTree
                 }
             }
 
-            if (this.Expressions.Length > 2 && (group == OpGroup.INEQUALITY || group == OpGroup.EQUALITY))
+            if (group == OpGroup.INEQUALITY || group == OpGroup.EQUALITY)
             {
-                throw new ParserException(this, "Cannot use comparisons in a series of more than two expressions.");
+                if (this.Expressions.Length > 2)
+                {
+                    throw new ParserException(this, "Cannot use comparisons in a series of more than two expressions.");
+                }
+                return new PairComparison(this.FirstToken, this.Expressions[0], this.Expressions[1], this.Ops[0]);
             }
 
             if (group == OpGroup.MULTIPLY)
@@ -129,7 +137,7 @@ namespace Vanilla.ParseTree
                 return innermost;
             }
 
-            return this; // I think everything else is fine...I think
+            throw new System.Exception(); // oops, didn't cover a case
         }
 
         private Type CombineTypesWithOp(Type leftType, Token opToken, Type rightType)

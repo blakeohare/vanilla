@@ -77,10 +77,12 @@ namespace Vanilla.Transpiler
             return this.sb.ToString();
         }
 
+        protected abstract void SerializeArithmeticPairOp(ArithmeticPairOp apo, bool useWrap);
         protected abstract void SerializeAssignment(Assignment asgn);
         protected abstract void SerializeBasicFunctionInvocation(Expression root, Expression[] args, bool useWrap);
         protected abstract void SerializeBooleanConstant(BooleanConstant bc, bool useWrap);
         protected abstract void SerializeExpressionAsExecutable(ExpressionAsExecutable exex);
+        protected abstract void SerializeFoorLoop(ForLoop floop);
         protected abstract void SerializeForRangeLoop(ForRangeLoop frl);
         protected abstract void SerializeFunction(FunctionDefinition fd);
         protected abstract void SerializeFunctionSignature(FunctionDefinition fd);
@@ -88,15 +90,19 @@ namespace Vanilla.Transpiler
         protected abstract void SerializeIntegerConstant(IntegerConstant ic, bool useWrap);
         protected abstract void SerializeLocalFunctionInvocation(LocalFunctionInvocation lfi, bool useWrap);
         protected abstract void SerializeMapAccess(MapAccess ma, bool useWrap);
+        protected abstract void SerializePairComparision(PairComparison pc, bool useWrap);
         protected abstract void SerializeReturnStatement(ReturnStatement rs);
         protected abstract void SerializeStringConstant(StringConstant sc, bool useWrap);
         protected abstract void SerializeVariable(Variable vd, bool useWrap);
         protected abstract void SerializeVariableDeclaration(VariableDeclaration vd);
+
+        protected abstract void SerializeSysFuncArrayCastFrom(Type targetItemType, Type sourceItemType, bool isArray, Expression originalCollection, bool useWrap);
+        protected abstract void SerializeSysFuncFloor(Expression expr, bool useWrap);
         protected abstract void SerializeSysFuncListAdd(Type itemType, Expression listExpr, Expression itemExpr, bool useWrap);
         protected abstract void SerializeSysFuncListOf(Type itemType, Expression[] args, bool useWrap);
         protected abstract void SerializeSysFuncListToArray(Type itemType, Expression listExpr, bool useWrap);
         protected abstract void SerializeSysFuncMapOf(Type keyType, Type valueType, Expression[] args, bool useWrap);
-        protected abstract void SerializeSysFuncArrayCastFrom(Type targetItemType, Type sourceItemType, bool isArray, Expression originalCollection, bool useWrap);
+        protected abstract void SerializeSysFuncSqrt(Expression expr, bool useWrap);
 
         internal void SerializeExecutable(Executable ex)
         {
@@ -105,6 +111,7 @@ namespace Vanilla.Transpiler
             {
                 case "Assignment": this.SerializeAssignment((Assignment)ex); break;
                 case "ExpressionAsExecutable": this.SerializeExpressionAsExecutable((ExpressionAsExecutable)ex); break;
+                case "ForLoop": this.SerializeFoorLoop((ForLoop)ex); break;
                 case "IfStatement": this.SerializeIfStatement((IfStatement)ex); break;
                 case "ReturnStatement": this.SerializeReturnStatement((ReturnStatement)ex); break;
                 case "VariableDeclaration": this.SerializeVariableDeclaration((VariableDeclaration)ex); break;
@@ -118,15 +125,19 @@ namespace Vanilla.Transpiler
             string name = expr.GetType().Name;
             switch (name)
             {
+                case "ArithmeticPairOp": this.SerializeArithmeticPairOp((ArithmeticPairOp)expr, useWrap); break;
                 case "BooleanConstant": this.SerializeBooleanConstant((BooleanConstant)expr, useWrap); break;
                 case "FunctionInvocation": this.SerializeFunctionInvocation((FunctionInvocation)expr, useWrap); break;
                 case "IntegerConstant": this.SerializeIntegerConstant((IntegerConstant)expr, useWrap); break;
                 case "LocalFunctionInvocation": this.SerializeLocalFunctionInvocation((LocalFunctionInvocation)expr, useWrap); break;
                 case "MapAccess": this.SerializeMapAccess((MapAccess)expr, useWrap); break;
-                case "OpChain": this.SerializeOpChain((OpChain)expr, useWrap); break;
+                case "PairComparison": this.SerializePairComparision((PairComparison)expr, useWrap); break;
                 case "StringConstant": this.SerializeStringConstant((StringConstant)expr, useWrap); break;
                 case "SystemFunctionInvocation": this.SerializeSystemFunctionInvocation((SystemFunctionInvocation)expr, useWrap); break;
                 case "Variable": this.SerializeVariable((Variable)expr, useWrap); break;
+
+                case "OpChain": throw new Exception(); // OpChains should be resolved at this point into more specific types
+
                 default: throw new NotImplementedException();
             }
         }
@@ -186,7 +197,7 @@ namespace Vanilla.Transpiler
 
         private void SerializeOpChain(OpChain oc, bool useWrap)
         {
-            throw new NotImplementedException();
+            throw new Exception(); // OpChains should be resolved at this point into more specific types
         }
 
         private void SerializeSystemFunctionInvocation(SystemFunctionInvocation sfi, bool useWrap)
@@ -194,11 +205,13 @@ namespace Vanilla.Transpiler
             switch (sfi.SysFuncId)
             {
                 case SystemFunctionType.ARRAY_CAST_FROM: this.SerializeSysFuncArrayCastFrom(sfi.ResolvedType.ItemType, sfi.ArgList[0].ResolvedType.ItemType, sfi.ArgList[0].ResolvedType.IsArray, sfi.ArgList[0], useWrap); break;
+                case SystemFunctionType.FLOOR: this.SerializeSysFuncFloor(sfi.ArgList[0], useWrap); break;
                 case SystemFunctionType.LIST_ADD: this.SerializeSysFuncListAdd(sfi.ArgList[0].ResolvedType.ItemType, sfi.ArgList[0], sfi.ArgList[1], useWrap); break;
                 case SystemFunctionType.LIST_OF: this.SerializeSysFuncListOf(sfi.ResolvedType.ItemType, sfi.ArgList, useWrap); break;
                 case SystemFunctionType.LIST_TO_ARRAY: this.SerializeSysFuncListToArray(sfi.ResolvedType.ItemType, sfi.ArgList[0], useWrap); break;
                 case SystemFunctionType.MAP_OF: this.SerializeSysFuncMapOf(sfi.ResolvedType.KeyType, sfi.ResolvedType.ValueType, sfi.ArgList, useWrap); break;
-                
+                case SystemFunctionType.SQRT: this.SerializeSysFuncSqrt(sfi.ArgList[0], useWrap); break;
+
                 default: throw new NotImplementedException();
             }
         }

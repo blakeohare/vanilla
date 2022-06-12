@@ -328,6 +328,38 @@ namespace Vanilla.Transpiler
             this.SerializeIfStatement(ifst, false);
         }
 
+        protected override void SerializeFoorLoop(ForLoop floop)
+        {
+            foreach (Executable initEx in floop.Init)
+            {
+                SerializeExecutable(initEx);
+            }
+
+            ApplyExecPrefix();
+            Append("while (");
+            if (floop.Condition != null)
+            {
+                SerializeExpression(floop.Condition, false);
+            }
+            else
+            {
+                Append('1');
+            }
+            Append(") {");
+            Append(NL);
+            this.TabLevel++;
+            SerializeExecutables(floop.Code);
+            Append(NL);
+            if (floop.Step.Length > 0)
+            {
+                SerializeExecutables(floop.Step);
+            }
+            this.TabLevel--;
+            Append(CurrentTab);
+            Append("}");
+            Append(NL);
+        }
+
         private void SerializeIfStatement(IfStatement ifst, bool isNested)
         {
             if (!isNested) ApplyExecPrefix();
@@ -397,6 +429,82 @@ namespace Vanilla.Transpiler
             Append("vutil_list_clone(");
             SerializeExpression(listExpr, true);
             Append(')');
+        }
+
+        protected override void SerializePairComparision(PairComparison pc, bool useWrap)
+        {
+            if (useWrap) Append("vutil_get_bool(vctx, ");
+            Append('(');
+            SerializeExpression(pc.Left, false);
+            Append(") ");
+            Append(pc.Op.Value);
+            Append(" (");
+            SerializeExpression(pc.Right, false);
+            Append(")");
+            if (useWrap) Append(')');
+        }
+
+        protected override void SerializeArithmeticPairOp(ArithmeticPairOp apo, bool useWrap)
+        {
+            bool isMod = apo.IsModulo;
+            bool useNativeMod = isMod && ((apo.Right is IntegerConstant && ((IntegerConstant)apo.Right).Value > 0) || apo.Right is FloatConstant && ((FloatConstant)apo.Right).Value > 0);
+            bool usingHelperFunction = isMod && !useNativeMod;
+
+
+            if (useWrap)
+            {
+                Append(apo.ResolvedType.IsFloat ? "vutil_get_float(vctx, " : "vutil_get_int(vctx, ");
+            }
+            else if (!usingHelperFunction)
+            {
+                Append('(');
+            }
+
+            if (isMod)
+            {
+                if (useNativeMod)
+                {
+                    SerializeExpression(apo.Left, false);
+                    Append(" % ");
+                    SerializeExpression(apo.Right, false);
+                }
+                else
+                {
+                    Append(apo.ResolvedType.IsFloat ? "vutil_safe_modf(" : "vutil_safe_mod(");
+                    SerializeExpression(apo.Left, false);
+                    Append(", ");
+                    SerializeExpression(apo.Right, false);
+                    Append(")");
+                }
+            }
+            else
+            {
+                SerializeExpression(apo.Left, false);
+                Append(' ');
+                Append(apo.Op.Value);
+                Append(' ');
+                SerializeExpression(apo.Right, false);
+            }
+
+            if (useWrap || !usingHelperFunction) Append(')');
+        }
+
+        protected override void SerializeSysFuncFloor(Expression expr, bool useWrap)
+        {
+            if (useWrap) Append("vutil_get_int(vctx, ");
+            else Append(')');
+            Append("(int) ");
+            SerializeExpression(expr, false);
+            Append(')');
+        }
+
+        protected override void SerializeSysFuncSqrt(Expression expr, bool useWrap)
+        {
+            if (useWrap) Append("vutil_get_float(vctx, ");
+            Append("sqrt(");
+            SerializeExpression(expr, false);
+            Append(")");
+            if (useWrap) Append(')');
         }
     }
 }
