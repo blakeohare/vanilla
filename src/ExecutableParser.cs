@@ -115,6 +115,7 @@ namespace Vanilla
             {
                 case ForLoopType.FOREACH:
                     if (loopVarDecl == null) throw new ParserException(forToken, "for loops over collections require a variable declaration");
+                    if (!loopVarDecl.IsConst) throw new ParserException(loopVarDecl, "for loop iterating variables must be constants");
                     tokens.PopExpected("in");
                     Expression collection = this.ExprParser.ParseExpression();
                     tokens.PopExpected(")");
@@ -123,6 +124,7 @@ namespace Vanilla
 
                 case ForLoopType.RANGE:
                     if (loopVarDecl == null) throw new ParserException(forToken, "for loops over ranges require a variable declaration");
+                    if (!loopVarDecl.IsConst) throw new ParserException(loopVarDecl, "for loop iterating variables must be constants");
                     tokens.PopExpected("from");
                     Expression start = this.ExprParser.ParseExpression();
                     if (!tokens.IsNext("thru") && !tokens.IsNext("till")) tokens.PopExpected("till"); // throws
