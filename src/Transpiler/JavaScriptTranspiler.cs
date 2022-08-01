@@ -85,13 +85,36 @@ namespace Vanilla.Transpiler
             string op = asgn.Op.Value;
 
             if (!omitSemicolon) ApplyExecPrefix();
-            if (asgn.Target is Variable)
+            if (asgn.Target is Variable v)
             {
-                // TODO: resolver should create lightweight variables that store only native values when resolving variable information
-                Variable v = (Variable)asgn.Target;
                 Append(v.Name);
-                Append(" " + op + " ");
-                SerializeExpression(asgn.Value, true);
+                Append(" = ");
+
+                if (op == "=")
+                {
+                    SerializeExpression(asgn.Value, true);
+                }
+                else
+                {
+                    op = op.Substring(0, op.Length - 1); // trim off the = suffix
+                    string rootType = asgn.Value.ResolvedType.RootType;
+                    if (rootType == "int")
+                    {
+                        Append("vutilGetInt(");
+                    }
+                    else if (rootType == "float")
+                    {
+                        Append("vutilGetFloat(");
+                    }
+                    else
+                    {
+                        throw new System.NotImplementedException();
+                    }
+                    Append(v.Name);
+                    Append(".value " + op + " (");
+                    SerializeExpression(asgn.Value, false);
+                    Append("))");
+                }
             }
             else if (asgn.Target is MapAccess)
             {
