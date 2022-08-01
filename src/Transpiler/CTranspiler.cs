@@ -68,6 +68,7 @@ namespace Vanilla.Transpiler
             if (useWrap) return;
             Type outgoingType = expression.ResolvedType;
             // TODO: implement this
+            throw new System.NotImplementedException();
         }
 
         private void ApplyExecPrefix()
@@ -126,11 +127,11 @@ namespace Vanilla.Transpiler
             Append(NL);
         }
 
-        protected override void SerializeAssignment(Assignment asgn)
+        protected override void SerializeAssignment(Assignment asgn, bool omitSemicolon)
         {
             string op = asgn.Op.Value;
 
-            ApplyExecPrefix();
+            if (!omitSemicolon) ApplyExecPrefix();
             if (asgn.Target is Variable)
             {
                 // TODO: resolver should create lightweight variables that store only native values when resolving variable information
@@ -157,12 +158,12 @@ namespace Vanilla.Transpiler
             {
                 throw new System.NotImplementedException();
             }
-            ApplyExecSuffix();
+            if (!omitSemicolon) ApplyExecSuffix();
         }
 
-        protected override void SerializeVariableDeclaration(VariableDeclaration vd)
+        protected override void SerializeVariableDeclaration(VariableDeclaration vd, bool omitSemicolon)
         {
-            ApplyExecPrefix();
+            if (!omitSemicolon) ApplyExecPrefix();
             Append("Value* ");
             Append(vd.Name);
             if (vd.InitialValue == null)
@@ -174,7 +175,7 @@ namespace Vanilla.Transpiler
                 Append(" = ");
                 SerializeExpression(vd.InitialValue, true);
             }
-            ApplyExecSuffix();
+            if (!omitSemicolon) ApplyExecSuffix();
         }
 
         protected override void SerializeSysFuncMapOf(Type keyType, Type valueType, Expression[] args, bool useWrap)
@@ -348,7 +349,7 @@ namespace Vanilla.Transpiler
                 ApplyExecSuffix();
             }
 
-            SerializeExecutable(frl.VarDeclaration);
+            SerializeExecutable(frl.VarDeclaration, false);
 
             ApplyExecPrefix();
             Append("for (int ");
@@ -388,11 +389,11 @@ namespace Vanilla.Transpiler
             this.SerializeIfStatement(ifst, false);
         }
 
-        protected override void SerializeFoorLoop(ForLoop floop)
+        protected override void SerializeForLoop(ForLoop floop)
         {
             foreach (Executable initEx in floop.Init)
             {
-                SerializeExecutable(initEx);
+                SerializeExecutable(initEx, false);
             }
 
             ApplyExecPrefix();
@@ -452,11 +453,11 @@ namespace Vanilla.Transpiler
             if (!isNested) Append(NL);
         }
 
-        protected override void SerializeExpressionAsExecutable(ExpressionAsExecutable exex)
+        protected override void SerializeExpressionAsExecutable(ExpressionAsExecutable exex, bool omitSemicolon)
         {
-            ApplyExecPrefix();
+            if (!omitSemicolon) ApplyExecPrefix();
             SerializeExpression(exex.Expression, true);
-            ApplyExecSuffix();
+            if (!omitSemicolon) ApplyExecSuffix();
         }
 
         protected override void SerializeLocalFunctionInvocation(LocalFunctionInvocation lfi, bool useWrap)
@@ -507,9 +508,8 @@ namespace Vanilla.Transpiler
         protected override void SerializeArithmeticPairOp(ArithmeticPairOp apo, bool useWrap)
         {
             bool isMod = apo.IsModulo;
-            bool useNativeMod = isMod && ((apo.Right is IntegerConstant && ((IntegerConstant)apo.Right).Value > 0) || apo.Right is FloatConstant && ((FloatConstant)apo.Right).Value > 0);
-            bool usingHelperFunction = isMod && !useNativeMod;
-
+            bool useNativeMod = isMod && apo.IsNativeModuloOkay;
+            bool usingHelperFunction = isMod && !useNativeMod; // Add other examples here.
 
             if (useWrap)
             {

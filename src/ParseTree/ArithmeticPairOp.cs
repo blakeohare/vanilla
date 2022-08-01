@@ -12,6 +12,15 @@ namespace Vanilla.ParseTree
         public Expression Right { get; private set; }
         public Token Op { get; private set; }
         public bool IsModulo { get { return this.Op.Value == "%"; } }
+        public bool IsNativeModuloOkay
+        {
+            get
+            {
+                return this.IsModulo &&
+                    ((this.Right is IntegerConstant && ((IntegerConstant)this.Right).Value > 0) ||
+                        this.Right is FloatConstant && ((FloatConstant)this.Right).Value > 0);
+            }
+        }
 
         public ArithmeticPairOp(Expression left, Token op, Expression right) : base(left.FirstToken)
         {

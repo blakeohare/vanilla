@@ -13,4 +13,8 @@
     <EmbeddedResource Include="Transpiler\Support\C\*.h" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Transpiler\Support\JavaScript\" />
+  </ItemGroup>
+
 </Project>

@@ -35,7 +35,7 @@ namespace Vanilla
             switch (options["language"].ToLowerInvariant())
             {
                 case "c": transpiler = new CTranspiler(bundle); break;
-                //case "js": transpiler = new JavaScriptTranspiler(bundle); break;
+                case "js": transpiler = new JavaScriptTranspiler(bundle); break;
                 default: throw new BuildException("Unknown language: " + options["language"]);
             }
 

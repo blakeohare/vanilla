@@ -80,11 +80,11 @@ namespace Vanilla.Transpiler
         }
 
         protected abstract void SerializeArithmeticPairOp(ArithmeticPairOp apo, bool useWrap);
-        protected abstract void SerializeAssignment(Assignment asgn);
+        protected abstract void SerializeAssignment(Assignment asgn, bool omitSemicolon);
         protected abstract void SerializeBasicFunctionInvocation(Expression root, Expression[] args, bool useWrap);
         protected abstract void SerializeBooleanConstant(BooleanConstant bc, bool useWrap);
-        protected abstract void SerializeExpressionAsExecutable(ExpressionAsExecutable exex);
-        protected abstract void SerializeFoorLoop(ForLoop floop);
+        protected abstract void SerializeExpressionAsExecutable(ExpressionAsExecutable exex, bool omitSemicolon);
+        protected abstract void SerializeForLoop(ForLoop floop);
         protected abstract void SerializeForRangeLoop(ForRangeLoop frl);
         protected abstract void SerializeFunction(FunctionDefinition fd);
         protected abstract void SerializeFunctionSignature(FunctionDefinition fd);
@@ -96,7 +96,7 @@ namespace Vanilla.Transpiler
         protected abstract void SerializeReturnStatement(ReturnStatement rs);
         protected abstract void SerializeStringConstant(StringConstant sc, bool useWrap);
         protected abstract void SerializeVariable(Variable vd, bool useWrap);
-        protected abstract void SerializeVariableDeclaration(VariableDeclaration vd);
+        protected abstract void SerializeVariableDeclaration(VariableDeclaration vd, bool omitSemicolon);
 
         protected abstract void SerializeSysFuncArrayCastFrom(Type targetItemType, Type sourceItemType, bool isArray, Expression originalCollection, bool useWrap);
         protected abstract void SerializeSysFuncFloor(Expression expr, bool useWrap);
@@ -106,17 +106,17 @@ namespace Vanilla.Transpiler
         protected abstract void SerializeSysFuncMapOf(Type keyType, Type valueType, Expression[] args, bool useWrap);
         protected abstract void SerializeSysFuncSqrt(Expression expr, bool useWrap);
 
-        internal void SerializeExecutable(Executable ex)
+        internal void SerializeExecutable(Executable ex, bool omitSemicolon)
         {
             string name = ex.GetType().Name;
             switch (name)
             {
-                case "Assignment": this.SerializeAssignment((Assignment)ex); break;
-                case "ExpressionAsExecutable": this.SerializeExpressionAsExecutable((ExpressionAsExecutable)ex); break;
-                case "ForLoop": this.SerializeFoorLoop((ForLoop)ex); break;
+                case "Assignment": this.SerializeAssignment((Assignment)ex, omitSemicolon); break;
+                case "ExpressionAsExecutable": this.SerializeExpressionAsExecutable((ExpressionAsExecutable)ex, omitSemicolon); break;
+                case "ForLoop": this.SerializeForLoop((ForLoop)ex); break;
                 case "IfStatement": this.SerializeIfStatement((IfStatement)ex); break;
                 case "ReturnStatement": this.SerializeReturnStatement((ReturnStatement)ex); break;
-                case "VariableDeclaration": this.SerializeVariableDeclaration((VariableDeclaration)ex); break;
+                case "VariableDeclaration": this.SerializeVariableDeclaration((VariableDeclaration)ex, omitSemicolon); break;
                 case "ForRangeLoop": this.SerializeForRangeLoop((ForRangeLoop)ex); break;
                 default: throw new NotImplementedException(name);
             }
@@ -148,7 +148,7 @@ namespace Vanilla.Transpiler
         {
             foreach (Executable line in lines)
             {
-                SerializeExecutable(line);
+                SerializeExecutable(line, false);
             }
         }
 
