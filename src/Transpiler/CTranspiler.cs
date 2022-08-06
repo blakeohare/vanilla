@@ -127,37 +127,39 @@ namespace Vanilla.Transpiler
             Append(NL);
         }
 
-        protected override void SerializeAssignment(Assignment asgn, bool omitSemicolon)
+        protected override void SerializeAssignmentToField(DotField df, Assignment asgn, bool omitSemicolon)
         {
             string op = asgn.Op.Value;
-
             if (!omitSemicolon) ApplyExecPrefix();
-            if (asgn.Target is Variable)
-            {
-                // TODO: resolver should create lightweight variables that store only native values when resolving variable information
-                Variable v = (Variable)asgn.Target;
-                Append(v.Name);
-                Append(" " + op + " ");
-                SerializeExpression(asgn.Value, true);
-            }
-            else if (asgn.Target is MapAccess)
-            {
-                if (op != "=") throw new System.NotImplementedException(); // TODO: temporary storage of root expression and key computation if not a direct variable or constants.
+            throw new System.NotImplementedException();
+            // if (!omitSemicolon) ApplyExecSuffix();
+        }
 
-                MapAccess ma = (MapAccess)asgn.Target;
-                Expression key = ma.Key;
-                Append(key.ResolvedType.IsString ? "vutil_map_set_str(" : "vutil_map_set_int(");
-                SerializeExpression(ma.Root, true);
-                Append(", ");
-                SerializeExpression(key, true);
-                Append(", ");
-                SerializeExpression(asgn.Value, true);
-                Append(')');
-            }
-            else
-            {
-                throw new System.NotImplementedException();
-            }
+        protected override void SerializeAssignmentToMap(MapAccess ma, Assignment asgn, bool omitSemicolon)
+        {
+            string op = asgn.Op.Value;
+            if (!omitSemicolon) ApplyExecPrefix();
+            if (op != "=") throw new System.NotImplementedException(); // TODO: temporary storage of root expression and key computation if not a direct variable or constants.
+
+            Expression key = ma.Key;
+            Append(key.ResolvedType.IsString ? "vutil_map_set_str(" : "vutil_map_set_int(");
+            SerializeExpression(ma.Root, true);
+            Append(", ");
+            SerializeExpression(key, true);
+            Append(", ");
+            SerializeExpression(asgn.Value, true);
+            Append(')');
+            if (!omitSemicolon) ApplyExecSuffix();
+        }
+
+        protected override void SerializeAssignmentToVariable(Variable v, Assignment asgn, bool omitSemicolon)
+        {
+            string op = asgn.Op.Value;
+            if (!omitSemicolon) ApplyExecPrefix();
+            // TODO: resolver should create lightweight variables that store only native values when resolving variable information
+            Append(v.Name);
+            Append(" " + op + " ");
+            SerializeExpression(asgn.Value, true);
             if (!omitSemicolon) ApplyExecSuffix();
         }
 

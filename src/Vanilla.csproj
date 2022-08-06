@@ -11,10 +11,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Transpiler\Support\C\*.h" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="Transpiler\Support\JavaScript\*vutil.js" />
+    <EmbeddedResource Include="Transpiler\Support\JavaScript\*.js" />
   </ItemGroup>
 
 </Project>

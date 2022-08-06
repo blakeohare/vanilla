@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Text;
 using Vanilla.ParseTree;
 
 namespace Vanilla.Transpiler
@@ -41,7 +40,7 @@ namespace Vanilla.Transpiler
             outputFilePieces.Add(Resources.GetResourceText("Transpiler/Support/JavaScript/VContext.js"));
             outputFilePieces.Add(Resources.GetResourceText("Transpiler/Support/JavaScript/vutil.js"));
 
-            outputFilePieces.Add(string.Join('\n', new string[] { 
+            outputFilePieces.Add(string.Join('\n', new string[] {
                 "const vctx = createVanillaContext();",
                 "const vutil = createVutil(vctx);",
                 "const { vutilGetInt, vutilWrapArray, vutilNewMap, vutilSafeMod, vutilUnwrapNative, vutilWrapNative } = vutil;",
@@ -49,7 +48,7 @@ namespace Vanilla.Transpiler
 
             outputFilePieces.Add(outputFile);
 
-            outputFilePieces.Add(string.Join('\n', new string[] { 
+            outputFilePieces.Add(string.Join('\n', new string[] {
                 "return { findPrimes: function() {",
                 "  return vutilUnwrapNative(findPrimes(...[...arguments].map(vutilWrapNative)));",
                 "}};",
@@ -57,7 +56,7 @@ namespace Vanilla.Transpiler
             }));
 
             System.IO.File.WriteAllText(
-                System.IO.Path.Combine(destDir, "gen.js"), 
+                System.IO.Path.Combine(destDir, "gen.js"),
                 string.Join("\n\n", outputFilePieces));
         }
 
@@ -105,56 +104,59 @@ namespace Vanilla.Transpiler
             if (useWrap || !usingHelperFunction) Append(')');
         }
 
-        protected override void SerializeAssignment(Assignment asgn, bool omitSemicolon)
+        protected override void SerializeAssignmentToField(DotField target, Assignment asgn, bool omitSemicolon)
         {
             string op = asgn.Op.Value;
-
             if (!omitSemicolon) ApplyExecPrefix();
-            if (asgn.Target is Variable v)
-            {
-                Append(v.Name);
-                Append(" = ");
+            throw new System.NotImplementedException();
+            // if (!omitSemicolon) ApplyExecSuffix();
+        }
 
-                if (op == "=")
-                {
-                    SerializeExpression(asgn.Value, true);
-                }
-                else
-                {
-                    op = op.Substring(0, op.Length - 1); // trim off the = suffix
-                    string rootType = asgn.Value.ResolvedType.RootType;
-                    if (rootType == "int")
-                    {
-                        Append("vutilGetInt(");
-                    }
-                    else if (rootType == "float")
-                    {
-                        Append("vutilGetFloat(");
-                    }
-                    else
-                    {
-                        throw new System.NotImplementedException();
-                    }
-                    Append(v.Name);
-                    Append(".value " + op + " (");
-                    SerializeExpression(asgn.Value, false);
-                    Append("))");
-                }
-            }
-            else if (asgn.Target is MapAccess)
+        protected override void SerializeAssignmentToMap(MapAccess ma, Assignment asgn, bool omitSemicolon)
+        {
+            string op = asgn.Op.Value;
+            if (!omitSemicolon) ApplyExecPrefix();
+            if (op != "=") throw new System.NotImplementedException(); // TODO: temporary storage of root expression and key computation if not a direct variable or constants.
+            Expression key = ma.Key;
+            SerializeExpression(ma.Root, false);
+            Append('[');
+            SerializeExpression(key, false);
+            Append("] = ");
+            SerializeExpression(asgn.Value, true);
+            if (!omitSemicolon) ApplyExecSuffix();
+        }
+
+        protected override void SerializeAssignmentToVariable(Variable v, Assignment asgn, bool omitSemicolon)
+        {
+            string op = asgn.Op.Value;
+            if (!omitSemicolon) ApplyExecPrefix();
+            Append(v.Name);
+            Append(" = ");
+
+            if (op == "=")
             {
-                if (op != "=") throw new System.NotImplementedException(); // TODO: temporary storage of root expression and key computation if not a direct variable or constants.
-                MapAccess ma = (MapAccess)asgn.Target;
-                Expression key = ma.Key;
-                SerializeExpression(ma.Root, false);
-                Append('[');
-                SerializeExpression(key, false);
-                Append("] = ");
                 SerializeExpression(asgn.Value, true);
             }
             else
             {
-                throw new System.NotImplementedException();
+                op = op.Substring(0, op.Length - 1); // trim off the = suffix
+                string rootType = asgn.Value.ResolvedType.RootType;
+                if (rootType == "int")
+                {
+                    Append("vutilGetInt(");
+                }
+                else if (rootType == "float")
+                {
+                    Append("vutilGetFloat(");
+                }
+                else
+                {
+                    throw new System.NotImplementedException();
+                }
+                Append(v.Name);
+                Append(".value " + op + " (");
+                SerializeExpression(asgn.Value, false);
+                Append("))");
             }
             if (!omitSemicolon) ApplyExecSuffix();
         }

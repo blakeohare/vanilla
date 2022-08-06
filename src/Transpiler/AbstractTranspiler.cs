@@ -80,7 +80,9 @@ namespace Vanilla.Transpiler
         }
 
         protected abstract void SerializeArithmeticPairOp(ArithmeticPairOp apo, bool useWrap);
-        protected abstract void SerializeAssignment(Assignment asgn, bool omitSemicolon);
+        protected abstract void SerializeAssignmentToVariable(Variable target, Assignment asgn, bool omitSemicolon);
+        protected abstract void SerializeAssignmentToMap(MapAccess target, Assignment asgn, bool omitSemicolon);
+        protected abstract void SerializeAssignmentToField(DotField target, Assignment asgn, bool omitSemicolon);
         protected abstract void SerializeBasicFunctionInvocation(Expression root, Expression[] args, bool useWrap);
         protected abstract void SerializeBooleanConstant(BooleanConstant bc, bool useWrap);
         protected abstract void SerializeExpressionAsExecutable(ExpressionAsExecutable exex, bool omitSemicolon);
@@ -111,7 +113,26 @@ namespace Vanilla.Transpiler
             string name = ex.GetType().Name;
             switch (name)
             {
-                case "Assignment": this.SerializeAssignment((Assignment)ex, omitSemicolon); break;
+                case "Assignment":
+                    // Maybe this should be in the resolver?
+                    Assignment asgn = (Assignment)ex;
+                    if (asgn.Target is Variable)
+                    {
+                        this.SerializeAssignmentToVariable((Variable)asgn.Target, asgn, omitSemicolon);
+                    }
+                    else if (asgn.Target is MapAccess)
+                    {
+                        this.SerializeAssignmentToMap((MapAccess)asgn.Target, asgn, omitSemicolon);
+                    }
+                    else if (asgn.Target is DotField)
+                    {
+                        this.SerializeAssignmentToField((DotField)asgn.Target, asgn, omitSemicolon);
+                    }
+                    else
+                    {
+                        throw new Exception(); // should not happen
+                    }
+                    return;
                 case "ExpressionAsExecutable": this.SerializeExpressionAsExecutable((ExpressionAsExecutable)ex, omitSemicolon); break;
                 case "ForLoop": this.SerializeForLoop((ForLoop)ex); break;
                 case "IfStatement": this.SerializeIfStatement((IfStatement)ex); break;
