@@ -33,7 +33,32 @@ namespace Vanilla.Transpiler
         {
             string outputFile = this.GenerateMainFile();
 
-            throw new System.NotImplementedException();
+            string destDir = verifiedDestinationPath;
+
+            List<string> outputFilePieces = new List<string>();
+
+            outputFilePieces.Add("const { findPrimes } = (() => {");
+            outputFilePieces.Add(Resources.GetResourceText("Transpiler/Support/JavaScript/VContext.js"));
+            outputFilePieces.Add(Resources.GetResourceText("Transpiler/Support/JavaScript/vutil.js"));
+
+            outputFilePieces.Add(string.Join('\n', new string[] { 
+                "const vctx = createVanillaContext();",
+                "const vutil = createVutil(vctx);",
+                "const { vutilGetInt, vutilWrapArray, vutilNewMap, vutilSafeMod, vutilUnwrapNative, vutilWrapNative } = vutil;",
+            }));
+
+            outputFilePieces.Add(outputFile);
+
+            outputFilePieces.Add(string.Join('\n', new string[] { 
+                "return { findPrimes: function() {",
+                "  return vutilUnwrapNative(findPrimes(...[...arguments].map(vutilWrapNative)));",
+                "}};",
+                "})();",
+            }));
+
+            System.IO.File.WriteAllText(
+                System.IO.Path.Combine(destDir, "gen.js"), 
+                string.Join("\n\n", outputFilePieces));
         }
 
         protected override void SerializeArithmeticPairOp(ArithmeticPairOp apo, bool useWrap)
@@ -119,7 +144,6 @@ namespace Vanilla.Transpiler
             else if (asgn.Target is MapAccess)
             {
                 if (op != "=") throw new System.NotImplementedException(); // TODO: temporary storage of root expression and key computation if not a direct variable or constants.
-
                 MapAccess ma = (MapAccess)asgn.Target;
                 Expression key = ma.Key;
                 SerializeExpression(ma.Root, false);
@@ -454,7 +478,7 @@ namespace Vanilla.Transpiler
 
             if (useWrap)
             {
-                Append("vutilNewMap({})");
+                Append("vutilNewMap(" + (keyType.IsInteger ? "true" : "false") + ")");
             }
             else
             {

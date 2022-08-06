@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Transpiler\Support\JavaScript\" />
+    <EmbeddedResource Include="Transpiler\Support\JavaScript\*vutil.js" />
   </ItemGroup>
 
 </Project>
