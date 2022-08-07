@@ -40,10 +40,21 @@ namespace Vanilla.Transpiler
             outputFilePieces.Add(Resources.GetResourceText("Transpiler/Support/JavaScript/VContext.js"));
             outputFilePieces.Add(Resources.GetResourceText("Transpiler/Support/JavaScript/vutil.js"));
 
+            string[] vutilMethods = new string[] {
+                "vutilGetCommonString",
+                "vutilGetInt",
+                "vutilMapSet",
+                "vutilNewMap",
+                "vutilSafeMod",
+                "vutilUnwrapNative",
+                "vutilWrapArray",
+                "vutilWrapNative",
+            };
+
             outputFilePieces.Add(string.Join('\n', new string[] {
                 "const vctx = createVanillaContext();",
                 "const vutil = createVutil(vctx);",
-                "const { vutilGetInt, vutilWrapArray, vutilNewMap, vutilSafeMod, vutilUnwrapNative, vutilWrapNative } = vutil;",
+                "const { " + string.Join(", ", vutilMethods) + " } = vutil;",
             }));
 
             outputFilePieces.Add(outputFile);
@@ -118,11 +129,14 @@ namespace Vanilla.Transpiler
             if (!omitSemicolon) ApplyExecPrefix();
             if (op != "=") throw new System.NotImplementedException(); // TODO: temporary storage of root expression and key computation if not a direct variable or constants.
             Expression key = ma.Key;
-            SerializeExpression(ma.Root, false);
-            Append('[');
-            SerializeExpression(key, false);
-            Append("] = ");
+            Append("vutilMapSet(");
+            SerializeExpression(ma.Root, true);
+            Append(", ");
+            SerializeExpression(key, true);
+            Append(", ");
             SerializeExpression(asgn.Value, true);
+            Append(")");
+
             if (!omitSemicolon) ApplyExecSuffix();
         }
 
@@ -407,9 +421,9 @@ namespace Vanilla.Transpiler
             if (useWrap)
             {
                 // TODO: build a string table, like in the C version
-                Append("vutilGetCommonString('");
+                Append("vutilGetCommonString(");
                 Append(codeValue);
-                Append("')");
+                Append(')');
             }
             else
             {

@@ -1,11 +1,29 @@
 ﻿const createVutil = (vctx) => {
-
+	let vutilGetCommonString = (s) => {
+		let ws = vctx.commonStrings[s];
+		if (ws === undefined) {
+			ws = { type: 'S', value: s };
+			vctx.commonStrings[s] = ws;
+		}
+		return ws;
+	};
 	let vutilGetInt = (n) => {
 		if (n < 1000 && n > -1000) {
 			if (n < 0) return vctx.numNeg[-n];
 			return vctx.numPos[n];
 		}
 		return { type: 'I', value: n };
+	};
+	let vutilMapSet = (wm, wk, wv) => {
+		let nk = wk.value;
+		let i = wm.nativeKeyToIndex[nk];
+		if (i === undefined) {
+			wm.nativeKeyToIndex[nk] = wm.keys.length;
+			wm.keys.push(wk);
+			wm.values.push(wv);
+		} else {
+			wm.values[i] = wv;
+		}
 	};
 	let vutilNewMap = (isIntKeys) => {
 		return { type: 'M', keys: [], values: [], nativeKeyToIndex: {}, isIntKeys };
@@ -95,7 +113,9 @@
 	};
 
 	return {
+		vutilGetCommonString,
 		vutilGetInt,
+		vutilMapSet,
 		vutilNewMap,
 		vutilSafeMod,
 		vutilUnwrapNative,
