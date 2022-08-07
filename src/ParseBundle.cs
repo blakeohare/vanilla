@@ -8,5 +8,6 @@ namespace Vanilla
         public FunctionDefinition[] FunctionDefinitions { get; set; }
         public EnumDefinition[] EnumDefinitions { get; set; }
         public Field[] FieldDefinitions { get; set; }
+        public string[] StringDefinitions { get; set; }
     }
 }

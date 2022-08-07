@@ -42,6 +42,7 @@ namespace Vanilla
                 FunctionDefinitions = entities.OfType<FunctionDefinition>().ToArray(),
                 EnumDefinitions = entities.OfType<EnumDefinition>().ToArray(),
                 FieldDefinitions = entities.OfType<Field>().ToArray(),
+                StringDefinitions = resolver.GetAllStringConstantsById().ToArray(),
             };
         }
     }

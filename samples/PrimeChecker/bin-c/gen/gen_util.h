@@ -412,7 +412,7 @@ int* vutil_list_to_int_array(Value* vlist, int* size) {
 	if (size != NULL) *size = arrSize;
 	int* arr = (int*)malloc(sizeof(int) * arrSize);
 	for (int i = 0; i < arrSize; i++) {
-		arr[i] = ((ValueInt*)values)->value;
+		arr[i] = ((ValueInt*)values[i])->value;
 	}
 	free(values);
 	return arr;

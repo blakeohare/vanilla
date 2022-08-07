@@ -33,6 +33,11 @@ namespace Vanilla.Transpiler
             }
         }
 
+        public string[] GetStringTableEntries()
+        {
+            return this.bundle.StringDefinitions.ToArray();
+        }
+
         public FunctionDefinition[] GetPublicFunctions()
         {
             return this.bundle.FunctionDefinitions

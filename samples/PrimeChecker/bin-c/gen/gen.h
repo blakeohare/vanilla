@@ -6,10 +6,9 @@
 #include "gen_util.h"
 
 VContext* create_context() {
-    VContext* vctx = vutil_initialize_context(3);
-    vctx->string_table[0] = vutil_get_string_from_chars(vctx, "Example...");
-    vctx->string_table[1] = vutil_get_string_from_chars(vctx, "   ...string table...");
-    vctx->string_table[2] = vutil_get_string_from_chars(vctx, "      ...strings!");
+    VContext* vctx = vutil_initialize_context(2);
+    vctx->string_table[0] = vutil_get_string_from_chars(vctx, "ok");
+    vctx->string_table[1] = vutil_get_string_from_chars(vctx, "nums");
     return vctx;
 }
 
@@ -35,7 +34,7 @@ Value* fn_generatePrimeList(VContext* vctx, Value* lowerBound, Value* upperBound
     _loc2 += _loc3;
     Value* i = NULL;
     for (int _loc4 = _loc1; _loc4 != _loc2; _loc4 += _loc3) {
-        Value* i = vutil_get_int(vctx, _loc4);
+        i = vutil_get_int(vctx, _loc4);
         if (((ValueBoolean*)(fn_isPrime(vctx, i)))->value) {
             vutil_list_add(vctx, results, i);
         }

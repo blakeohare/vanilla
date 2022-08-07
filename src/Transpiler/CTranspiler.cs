@@ -26,7 +26,7 @@ namespace Vanilla.Transpiler
                 ""
             };
 
-            string[] stringTableMembers = new string[] { "Example...", "   ...string table...", "      ...strings!" };
+            string[] stringTableMembers = this.GetStringTableEntries();
 
             outputFilePieces.AddRange(new string[] {
                 "VContext* create_context() {",

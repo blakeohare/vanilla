@@ -13,6 +13,9 @@ namespace Vanilla
         private Field[] topLevelFields;
         private ClassDefinition[] allClasses;
         private EnumDefinition[] allEnums;
+        
+        private List<string> allStringConstants;
+        private Dictionary<string, int> stringConstantToEntryIndex;
 
         public Resolver(IList<TopLevelEntity> entities)
         {
@@ -21,6 +24,11 @@ namespace Vanilla
             this.topLevelFields = entities.OfType<Field>().ToArray();
             this.allClasses = entities.OfType<ClassDefinition>().ToArray();
             this.allEnums = entities.OfType<EnumDefinition>().ToArray();
+        }
+
+        public IList<string> GetAllStringConstantsById()
+        {
+            return this.allStringConstants.ToArray();
         }
 
         internal FunctionDefinition GetFunctionByName(string name)
@@ -115,10 +123,24 @@ namespace Vanilla
 
         private void ResolveTypes()
         {
+            this.allStringConstants = new List<string>();
+            this.stringConstantToEntryIndex = new Dictionary<string, int>();
             foreach (FunctionDefinition fd in AllFunctionsIncludingNested())
             {
                 fd.ResolveTypes(this);
             }
+        }
+
+        internal int RegisterStringConstant(string value)
+        {
+            if (this.stringConstantToEntryIndex.ContainsKey(value))
+            {
+                return this.stringConstantToEntryIndex[value];
+            }
+            int index = this.allStringConstants.Count;
+            this.stringConstantToEntryIndex[value] = index;
+            this.allStringConstants.Add(value);
+            return index;
         }
     }
 }
