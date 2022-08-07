@@ -8,7 +8,7 @@
 	Value* global_float_one;
 	Value** global_int_pos;
 	Value** global_int_neg;
-	Value** global_empty_string;
+	Value* global_empty_string;
 	Value** string_table;
 	Value** string_single_char;
 	ValueInt* mru_int;

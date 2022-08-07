@@ -19,7 +19,12 @@ namespace Vanilla.Transpiler
         {
             string destDir = verifiedDestinationPath;
             string outputFile = this.GenerateMainFile();
-            List<string> outputFilePieces = new List<string>() { "#include \"gen_util.h\"", "" };
+            List<string> outputFilePieces = new List<string>() {
+                "#include <stdio.h>",
+                "#include <stdlib.h>",
+                "#include \"gen_util.h\"",
+                ""
+            };
 
             string[] stringTableMembers = new string[] { "Example...", "   ...string table...", "      ...strings!" };
 
@@ -48,9 +53,16 @@ namespace Vanilla.Transpiler
                 "util.h",
             }.Select(name => Resources.GetResourceText("Transpiler/Support/C/" + name)).ToArray();
 
+            string code = string.Join("\n\n", headerFileContent);
+
             System.IO.File.WriteAllText(
                 System.IO.Path.Combine(destDir, "gen_util.h"),
-                EnsureLineEndings(WrapWithIfNDef("_VANILLA_GENERATED_UTIL_H", string.Join("\n\n", headerFileContent))));
+                EnsureLineEndings(WrapWithIfNDef("_VANILLA_GENERATED_UTIL_H",
+                    "#include <stdio.h>\n" +
+                    "#include <stdlib.h>\n" +
+                    "\n" +
+                    code
+                    )));
         }
 
         private static string EnsureLineEndings(string code)
@@ -193,10 +205,30 @@ namespace Vanilla.Transpiler
         {
             string op = asgn.Op.Value;
             if (!omitSemicolon) ApplyExecPrefix();
-            // TODO: resolver should create lightweight variables that store only native values when resolving variable information
-            Append(v.Name);
-            Append(" " + op + " ");
-            SerializeExpression(asgn.Value, true);
+            if (op == "=")
+            {
+                Append(v.Name);
+                Append(' ');
+                Append(op);
+                Append(' ');
+                SerializeExpression(asgn.Value, true);
+            }
+            else
+            {
+                Append(v.Name);
+                Append(" = ");
+                switch (asgn.Target.ResolvedType.RootType)
+                {
+                    case "int":
+                        Append("vutil_get_int(vctx, ");
+                        break;
+                    default: throw new System.NotImplementedException();
+                }
+                SerializeVariable(v, false);
+                Append(op[0]);
+                SerializeExpression(asgn.Value, false);
+                Append(')');
+            }
             if (!omitSemicolon) ApplyExecSuffix();
         }
 
@@ -339,7 +371,7 @@ namespace Vanilla.Transpiler
             {
                 Append("vutil_list_add(");
             }
-            Append("vutil_list_new()");
+            Append("vutil_list_new(vctx)");
             foreach (Expression arg in args)
             {
                 Append(", ");
@@ -409,8 +441,9 @@ namespace Vanilla.Transpiler
             this.TabLevel++;
 
             ApplyExecPrefix();
-            Append("_v" + frl.VarDeclaration.Name);
-            Append(" = vutil_int(vctx, ");
+            Append("Value* ");
+            Append(frl.VarDeclaration.Name);
+            Append(" = vutil_get_int(vctx, ");
             Append(iteratorVarName);
             Append(");");
             Append(NL);
@@ -502,6 +535,7 @@ namespace Vanilla.Transpiler
         protected override void SerializeLocalFunctionInvocation(LocalFunctionInvocation lfi, bool useWrap)
         {
             ApplyUnwrapPrefix(lfi, useWrap);
+            Append("fn_");
             Append(lfi.FuncRef.FunctionDefinition.Name);
             Append("(vctx");
             for (int i = 0; i < lfi.ArgList.Length; i++)

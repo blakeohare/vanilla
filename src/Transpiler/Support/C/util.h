@@ -26,7 +26,7 @@ Value* vutil_get_int(VContext* vctx, int value) {
 
 	ValueInt* new_int = (ValueInt*)vutil_gc_create_new_value(vctx, 'I', sizeof(ValueInt));
 	new_int->value = value;
-	return new_int;
+	return (Value*)new_int;
 }
 
 Value* vutil_get_float(VContext* vctx, double value) {
@@ -36,7 +36,7 @@ Value* vutil_get_float(VContext* vctx, double value) {
 
 	ValueFloat* new_float = (ValueFloat*)vutil_gc_create_new_value(vctx, 'F', sizeof(ValueFloat));
 	new_float->value = value;
-	return new_float;
+	return (Value*)new_float;
 }
 
 Value* vutil_get_string_from_chars(VContext* vctx, char* c_string) {
@@ -139,7 +139,7 @@ VContext* vutil_initialize_context(int string_table_size) {
 	vctx->global_float_one = vutil_gc_create_new_value(vctx, 'F', sizeof(ValueInt));
 	((ValueFloat*)vctx->global_float_one)->value = 1.0;
 
-	vctx->mru_int = vctx->global_zero;
+	vctx->mru_int = (ValueInt*)vctx->global_zero;
 
 	vctx->string_single_char = (Value**)malloc(sizeof(ValueString*) * 128);
 	for (int i = 0; i < 128; i++) {
@@ -161,4 +161,12 @@ VContext* vutil_initialize_context(int string_table_size) {
 
 	vctx->string_table = (Value**)malloc(sizeof(Value*) * string_table_size);
 	return vctx;
+}
+
+Value* vutil_list_new(VContext* vctx) {
+	ValueList* list = (ValueList*)vutil_gc_create_new_value(vctx, 'L', sizeof(ValueList));
+	list->size = 0;
+	list->capacity = 4;
+	list->items = (Value**)malloc(sizeof(Value*) * 4);
+	return (Value*)list;
 }

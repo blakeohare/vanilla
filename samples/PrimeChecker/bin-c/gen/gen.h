@@ -1,6 +1,8 @@
 #ifndef _VANILLA_GEN_USER_CODE_H
 #define _VANILLA_GEN_USER_CODE_H
 
+#include <stdio.h>
+#include <stdlib.h>
 #include "gen_util.h"
 
 VContext* create_context() {
@@ -18,7 +20,7 @@ Value* fn_generatePrimeList(VContext* vctx, Value* lowerBound, Value* upperBound
 Value* fn_isPrime(VContext* vctx, Value* value);
 
 Value* fn_findPrimes(VContext* vctx, Value* upperLimit) {
-    Value* primes = generatePrimeList(vctx, vutil_get_int(vctx, 1), upperLimit);
+    Value* primes = fn_generatePrimeList(vctx, vutil_get_int(vctx, 1), upperLimit);
     Value* output = vutil_new_map('S');
     vutil_map_set_str(output, vctx->string_table[0], vctx->global_true);
     vutil_map_set_str(output, vctx->string_table[1], vutil_list_clone(primes));
@@ -26,15 +28,15 @@ Value* fn_findPrimes(VContext* vctx, Value* upperLimit) {
 }
 
 Value* fn_generatePrimeList(VContext* vctx, Value* lowerBound, Value* upperBound) {
-    Value* results = vutil_list_new();
+    Value* results = vutil_list_new(vctx);
     int _loc1 = ((ValueInt*)(lowerBound))->value;
     int _loc2 = ((ValueInt*)(upperBound))->value;
     int _loc3 = _loc1 < _loc2 ? 1 : -1;
     _loc2 += _loc3;
     Value* i = NULL;
     for (int _loc4 = _loc1; _loc4 != _loc2; _loc4 += _loc3) {
-        _vi = vutil_int(vctx, _loc4);
-        if (((ValueBoolean*)(isPrime(vctx, i)))->value) {
+        Value* i = vutil_get_int(vctx, _loc4);
+        if (((ValueBoolean*)(fn_isPrime(vctx, i)))->value) {
             vutil_list_add(results, i);
         }
     }
@@ -58,7 +60,7 @@ Value* fn_isPrime(VContext* vctx, Value* value) {
             return vctx->global_false;
         }
 
-        div += vutil_get_int(vctx, 2);
+        div = vutil_get_int(vctx, ((ValueInt*)(div))->value+2);
     }
     return vctx->global_true;
 }
