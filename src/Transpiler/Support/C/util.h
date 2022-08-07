@@ -281,3 +281,32 @@ int vutil_safe_mod(int num, int div) {
 	if (result < 0) result += div;
 	return result;
 }
+
+Value* vutil_get_map_string_value(Value* vmap, Value* key) {
+	MapNode* node = vutil_get_string_map_node(vmap, key, 0);
+	if (node == NULL) return NULL;
+	return node->value;
+}
+
+Value** vutil_list_to_array(Value* vlist, int* size) {
+	ValueList* list = (ValueList*)vlist;
+	int len = list->size;
+	if (size != NULL) *size = len;
+	Value** arr = (Value**)malloc(sizeof(Value*) * len);
+	for (int i = 0; i < len; i++) {
+		arr[i] = list->items[i];
+	}
+	return arr;
+}
+
+int* vutil_list_to_int_array(Value* vlist, int* size) {
+	int arrSize = 0;
+	Value** values = vutil_list_to_array(vlist, &arrSize);
+	if (size != NULL) *size = arrSize;
+	int* arr = (int**)malloc(sizeof(int) * arrSize);
+	for (int i = 0; i < arrSize; i++) {
+		arr[i] = ((ValueInt*)values)->value;
+	}
+	free(values);
+	return arr;
+}
