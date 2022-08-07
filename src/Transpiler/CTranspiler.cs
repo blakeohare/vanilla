@@ -60,6 +60,7 @@ namespace Vanilla.Transpiler
                 EnsureLineEndings(WrapWithIfNDef("_VANILLA_GENERATED_UTIL_H",
                     "#include <stdio.h>\n" +
                     "#include <stdlib.h>\n" +
+                    "#include <math.h>\n" +
                     "\n" +
                     code
                     )));
@@ -253,14 +254,9 @@ namespace Vanilla.Transpiler
         {
             EnsureUsingWrap(useWrap);
 
-            Append("vutil_new_map('");
-            switch (keyType.RootType)
-            {
-                case "string": Append('S'); break;
-                case "int": Append('I'); break;
-                default: Append('P'); break;
-            }
-            Append("')");
+            Append("vutil_new_map(vctx, ");
+            Append(keyType.IsString ? '1' : '0');
+            Append(')');
             for (int i = 0; i < args.Length; i += 2)
             {
                 Expression key = args[i];
@@ -345,7 +341,7 @@ namespace Vanilla.Transpiler
         protected override void SerializeSysFuncArrayCastFrom(Type targetItemType, Type sourceItemType, bool isArray, Expression originalCollection, bool useWrap)
         {
             EnsureUsingWrap(useWrap);
-            Append("vutil_list_clone(");
+            Append("vutil_list_clone(vctx, ");
             SerializeExpression(originalCollection, true);
             Append(")");
         }
@@ -369,7 +365,7 @@ namespace Vanilla.Transpiler
             // lol
             foreach (Expression arg in args)
             {
-                Append("vutil_list_add(");
+                Append("vutil_list_add(vctx, ");
             }
             Append("vutil_list_new(vctx)");
             foreach (Expression arg in args)
@@ -550,7 +546,7 @@ namespace Vanilla.Transpiler
         protected override void SerializeSysFuncListAdd(Type itemType, Expression listExpr, Expression itemExpr, bool useWrap)
         {
             EnsureUsingWrap(useWrap); // void
-            Append("vutil_list_add(");
+            Append("vutil_list_add(vctx, ");
             SerializeExpression(listExpr, true);
             Append(", ");
             SerializeExpression(itemExpr, true);
@@ -560,7 +556,7 @@ namespace Vanilla.Transpiler
         protected override void SerializeSysFuncListToArray(Type itemType, Expression listExpr, bool useWrap)
         {
             EnsureUsingWrap(useWrap);
-            Append("vutil_list_clone(");
+            Append("vutil_list_clone(vctx, ");
             SerializeExpression(listExpr, true);
             Append(')');
         }
@@ -634,7 +630,7 @@ namespace Vanilla.Transpiler
         protected override void SerializeSysFuncSqrt(Expression expr, bool useWrap)
         {
             if (useWrap) Append("vutil_get_float(vctx, ");
-            Append("sqrt(");
+            Append("vutil_sqrt(");
             SerializeExpression(expr, false);
             Append(")");
             if (useWrap) Append(')');

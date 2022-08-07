@@ -21,9 +21,9 @@ Value* fn_isPrime(VContext* vctx, Value* value);
 
 Value* fn_findPrimes(VContext* vctx, Value* upperLimit) {
     Value* primes = fn_generatePrimeList(vctx, vutil_get_int(vctx, 1), upperLimit);
-    Value* output = vutil_new_map('S');
+    Value* output = vutil_new_map(vctx, 1);
     vutil_map_set_str(output, vctx->string_table[0], vctx->global_true);
-    vutil_map_set_str(output, vctx->string_table[1], vutil_list_clone(primes));
+    vutil_map_set_str(output, vctx->string_table[1], vutil_list_clone(vctx, primes));
     return output;
 }
 
@@ -37,10 +37,10 @@ Value* fn_generatePrimeList(VContext* vctx, Value* lowerBound, Value* upperBound
     for (int _loc4 = _loc1; _loc4 != _loc2; _loc4 += _loc3) {
         Value* i = vutil_get_int(vctx, _loc4);
         if (((ValueBoolean*)(fn_isPrime(vctx, i)))->value) {
-            vutil_list_add(results, i);
+            vutil_list_add(vctx, results, i);
         }
     }
-    return vutil_list_clone(results);
+    return vutil_list_clone(vctx, results);
 }
 
 Value* fn_isPrime(VContext* vctx, Value* value) {
@@ -53,7 +53,7 @@ Value* fn_isPrime(VContext* vctx, Value* value) {
     if (((((ValueInt*)(value))->value % 2)) == (0)) {
         return vctx->global_false;
     }
-    Value* maxCheck = vutil_get_int(vctx, (int) sqrt(((ValueInt*)(value))->value));
+    Value* maxCheck = vutil_get_int(vctx, (int) vutil_sqrt(((ValueInt*)(value))->value));
     Value* div = vutil_get_int(vctx, 3);
     while ((((ValueInt*)(div))->value) <= (((ValueInt*)(maxCheck))->value)) {
         if ((vutil_safe_mod(((ValueInt*)(value))->value, ((ValueInt*)(div))->value)) == (0)) {

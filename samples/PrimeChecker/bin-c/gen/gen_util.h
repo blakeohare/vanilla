@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 typedef struct _Value {
 	char type;
@@ -77,7 +78,7 @@ typedef struct _VContext {
 	Value* global_float_one;
 	Value** global_int_pos;
 	Value** global_int_neg;
-	Value** global_empty_string;
+	Value* global_empty_string;
 	Value** string_table;
 	Value** string_single_char;
 	ValueInt* mru_int;
@@ -258,6 +259,117 @@ Value* vutil_list_new(VContext* vctx) {
 	list->capacity = 4;
 	list->items = (Value**)malloc(sizeof(Value*) * 4);
 	return (Value*)list;
+}
+
+int vutil_string_equals(ValueString* s1, ValueString* s2) {
+	if (s1 == s2) return 1;
+	if (s1->hash != s2->hash || s1->length != s2->length) return 0;
+	int len = s1->length;
+	int* p1 = s1->unicode_points;
+	int* p2 = s2->unicode_points;
+	for (int i = 0; i < len; i++) {
+		if (p1[i] != p2[i]) return 0;
+	}
+	return 1;
+}
+
+MapNode* vutil_get_string_map_node(Value* vmap, Value* vkey, int create_if_missing) {
+	ValueString* key = (ValueString*)vkey;
+	ValueMap* map = (ValueMap*)vmap;
+	int hashcode = key->hash;
+	int bucketIndex = hashcode % map->bucket_size;
+	if (bucketIndex < 0) bucketIndex += map->bucket_size;
+	MapNode* head = map->buckets[bucketIndex];
+	MapNode* walker = head;
+	MapNode* target = NULL;
+	while (walker != NULL) {
+		if (walker->hash == hashcode && vutil_string_equals((ValueString*)walker->key, key)) {
+			target = walker;
+			break;
+		}
+		walker = walker->next;
+	}
+
+	if (target == NULL && create_if_missing) {
+		// TODO: rehash if necessaryy
+		target = (MapNode*)malloc(sizeof(MapNode));
+		target->hash = hashcode;
+		target->key = vkey;
+		target->value = NULL;
+		target->next = head;
+		map->buckets[bucketIndex] = target;
+		map->size++;
+	}
+	return target;
+}
+
+void vutil_map_set_str(Value* wm, Value* wk, Value* wv) {
+	MapNode* node = vutil_get_string_map_node(wm, wk, 1);
+	node->value = wv;
+}
+
+Value* vutil_list_clone(VContext* vctx, Value* voriginal) {
+	ValueList* original = (ValueList*)voriginal;
+	if (original->size == 0) return vutil_list_new(vctx);
+
+	ValueList* list = (ValueList*)vutil_gc_create_new_value(vctx, 'L', sizeof(ValueList));
+	int len = original->size;
+	list->size = len;
+	list->capacity = len;
+	list->items = (Value**)malloc(sizeof(Value*) * len);
+	Value** original_items = ((ValueList*)original)->items;
+	for (int i = 0; i < len; i++) {
+		list->items[i] = original_items[i];
+	}
+	return (Value*)list;
+}
+
+double vutil_sqrt(double value) {
+	return sqrt(value);
+}
+
+Value* vutil_new_map(VContext* vctx, int is_string_key) {
+	ValueMap* map = (ValueMap*)vutil_gc_create_new_value(vctx, 'M', sizeof(ValueMap));
+
+	map->is_string_key = is_string_key;
+	map->size = 0;
+	map->bucket_size = 8;
+	map->buckets = (MapNode**)malloc(sizeof(MapNode*) * map->bucket_size);
+	for (int i = 0; i < map->bucket_size; i++) {
+		map->buckets[i] = NULL;
+	}
+
+	return (Value*)map;
+}
+
+void vutil_list_add(VContext* vctx, Value* vlist, Value* item) {
+	ValueList* list = (ValueList*)vlist;
+	if (list->size == list->capacity) {
+		int old_capacity = list->capacity;
+		int new_capacity = old_capacity * 2 + 1;
+		if (new_capacity < 10) new_capacity = 10;
+		Value** new_items = (Value**)malloc(sizeof(Value*) * new_capacity);
+		for (int i = 0; i < new_capacity; i++) {
+			new_items[i] = i < old_capacity ? list->items[i] : NULL;
+		}
+		free(list->items);
+		list->items = new_items;
+		list->capacity = new_capacity;
+	}
+
+	list->items[list->size++] = item;
+}
+
+double vutil_safe_modf(double num, double div) {
+	double result = fmod(num, div);
+	if (result < 0) result += div;
+	return result;
+}
+
+int vutil_safe_mod(int num, int div) {
+	int result = num % div;
+	if (result < 0) result += div;
+	return result;
 }
 
 #endif // _VANILLA_GENERATED_UTIL_H
