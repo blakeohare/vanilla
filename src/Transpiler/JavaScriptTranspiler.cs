@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Vanilla.ParseTree;
 
 namespace Vanilla.Transpiler
@@ -36,7 +37,9 @@ namespace Vanilla.Transpiler
 
             List<string> outputFilePieces = new List<string>();
 
-            outputFilePieces.Add("const { findPrimes } = (() => {");
+            FunctionDefinition[] pubFuncs = this.GetPublicFunctions();
+
+            outputFilePieces.Add("const { " + string.Join(", ", pubFuncs.Select(pb => pb.Name)) + " } = (() => {");
             outputFilePieces.Add(Resources.GetResourceText("Transpiler/Support/JavaScript/VContext.js"));
             outputFilePieces.Add(Resources.GetResourceText("Transpiler/Support/JavaScript/vutil.js"));
 
@@ -60,9 +63,11 @@ namespace Vanilla.Transpiler
             outputFilePieces.Add(outputFile);
 
             outputFilePieces.Add(string.Join('\n', new string[] {
-                "return { findPrimes: function() {",
-                "  return vutilUnwrapNative(findPrimes(...[...arguments].map(vutilWrapNative)));",
-                "}};",
+                "return { ",
+                string.Join('\n', pubFuncs.Select(pb => pb.Name).Select(funcName => {
+                    return "  " + funcName + ": function() { return vutilUnwrapNative(" + funcName + "(...[...arguments].map(vutilWrapNative))); },";
+                })),
+                "};",
                 "})();",
             }));
 

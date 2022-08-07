@@ -209,7 +209,7 @@ const isPrime = (value) => {
 
 
 
-return { findPrimes: function() {
-  return vutilUnwrapNative(findPrimes(...[...arguments].map(vutilWrapNative)));
-}};
+return { 
+  findPrimes: function() { return vutilUnwrapNative(findPrimes(...[...arguments].map(vutilWrapNative))); },
+};
 })();

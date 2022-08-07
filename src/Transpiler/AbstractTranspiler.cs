@@ -33,6 +33,14 @@ namespace Vanilla.Transpiler
             }
         }
 
+        public FunctionDefinition[] GetPublicFunctions()
+        {
+            return this.bundle.FunctionDefinitions
+                .Where(fd => fd.IsPublic)
+                .OrderBy(fd => fd.Name)
+                .ToArray();
+        }
+
         public abstract void EmitFiles(string verifiedDestinationPath);
 
         public AbstractTranspiler Append(string s)
