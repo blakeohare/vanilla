@@ -11,7 +11,7 @@
 	Value** global_empty_string;
 	Value** string_table;
 	Value** string_single_char;
-	Value* mru_int;
+	ValueInt* mru_int;
 
 	GCBucket* gc_universe;
 } VContext;

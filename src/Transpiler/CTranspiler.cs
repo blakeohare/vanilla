@@ -30,7 +30,7 @@ namespace Vanilla.Transpiler
             for (int i = 0; i < stringTableMembers.Length; i++)
             {
                 string escapedString = '"' + stringTableMembers[i].Replace("\"", "\\\"") + '"'; // TODO: This is a hack just to get it compiling. Need to escape strings with LATIN-only characters. Then need to create an alternative factory method for strings with special characters.
-                outputFilePieces.Add("    vctx->string_table[" + i + "] = vutil_get_string_from_chars(" + escapedString + ");");
+                outputFilePieces.Add("    vctx->string_table[" + i + "] = vutil_get_string_from_chars(vctx, " + escapedString + ");");
             }
             outputFilePieces.Add("    return vctx;");
             outputFilePieces.Add("}");
@@ -38,9 +38,9 @@ namespace Vanilla.Transpiler
             outputFilePieces.Add("");
             outputFilePieces.Add(outputFile);
 
-            outputFile = string.Join('\n', outputFilePieces);
+            outputFile = WrapWithIfNDef("_VANILLA_GEN_USER_CODE_H", string.Join('\n', outputFilePieces));
 
-            System.IO.File.WriteAllText(System.IO.Path.Combine(destDir, "gen.h"), outputFile);
+            System.IO.File.WriteAllText(System.IO.Path.Combine(destDir, "gen.h"), EnsureLineEndings(outputFile));
 
             string[] headerFileContent = new string[] {
                 "value.h",
@@ -48,7 +48,27 @@ namespace Vanilla.Transpiler
                 "util.h",
             }.Select(name => Resources.GetResourceText("Transpiler/Support/C/" + name)).ToArray();
 
-            System.IO.File.WriteAllText(System.IO.Path.Combine(destDir, "gen_util.h"), string.Join("\n\n", headerFileContent));
+            System.IO.File.WriteAllText(
+                System.IO.Path.Combine(destDir, "gen_util.h"),
+                EnsureLineEndings(WrapWithIfNDef("_VANILLA_GENERATED_UTIL_H", string.Join("\n\n", headerFileContent))));
+        }
+
+        private static string EnsureLineEndings(string code)
+        {
+            return code.Replace("\r\n", "\n");
+        }
+
+        private static string WrapWithIfNDef(string defVar, string code)
+        {
+            return string.Join("\n", new string[] {
+                    "#ifndef " + defVar,
+                    "#define " + defVar,
+                    "",
+                    code.Trim(),
+                    "",
+                    "#endif // " + defVar,
+                    "",
+                });
         }
 
         private void EnsureUsingWrap(bool useWrap)
@@ -60,15 +80,32 @@ namespace Vanilla.Transpiler
         {
             if (useWrap) return;
             Type outgoingType = expression.ResolvedType;
-            // TODO: implement this
+            switch (outgoingType.RootType)
+            {
+                case "bool":
+                    Append("((ValueBoolean*)(");
+                    break;
+                case "int":
+                    Append("((ValueInt*)(");
+                    break;
+                default:
+                    throw new System.NotImplementedException();
+            }
         }
 
         private void ApplyUnwrapSuffix(Expression expression, bool useWrap)
         {
             if (useWrap) return;
             Type outgoingType = expression.ResolvedType;
-            // TODO: implement this
-            throw new System.NotImplementedException();
+            switch (outgoingType.RootType)
+            {
+                case "bool":
+                case "int":
+                    Append("))->value");
+                    break;
+                default:
+                    throw new System.NotImplementedException();
+            }
         }
 
         private void ApplyExecPrefix()
@@ -269,7 +306,7 @@ namespace Vanilla.Transpiler
         {
             ApplyUnwrapPrefix(bc, useWrap);
             Append("vctx->");
-            Append(bc.Value ? "const_true" : "const_false");
+            Append(bc.Value ? "global_true" : "global_false");
             ApplyUnwrapSuffix(bc, useWrap);
         }
 
@@ -373,7 +410,7 @@ namespace Vanilla.Transpiler
 
             ApplyExecPrefix();
             Append("_v" + frl.VarDeclaration.Name);
-            Append(" = vutil_int(ctx, ");
+            Append(" = vutil_int(vctx, ");
             Append(iteratorVarName);
             Append(");");
             Append(NL);

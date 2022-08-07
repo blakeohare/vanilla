@@ -11,7 +11,7 @@ typedef struct _ValueInt {
 typedef struct _ValueFloat {
 	Value _valueHeader;
 	double value;
-};
+} ValueFloat;
 
 typedef struct _ValueString {
 	Value _valueHeader;
@@ -19,31 +19,31 @@ typedef struct _ValueString {
 	int hash;
 	char* c_string;
 	int* unicode_points;
-};
+} ValueString;
 
 typedef struct _ValueBoolean {
 	Value _valueHeader;
 	int value;
-};
+} ValueBoolean;
 
 typedef struct _ValueList {
 	Value _valueHeader;
 	int size;
 	int capacity;
 	Value** items;
-};
+} ValueList;
 
 typedef struct _ValueArray {
 	Value _valueHeader;
 	int size;
 	Value** items;
-};
+} ValueArray;
 
 typedef struct _MapNode {
 	int hash;
 	Value* key;
 	Value* value;
-	_MapNode* next;
+	struct _MapNode* next;
 } MapNode;
 
 typedef struct _ValueMap {
@@ -52,10 +52,10 @@ typedef struct _ValueMap {
 	int size;
 	int bucket_size;
 	MapNode** buckets;
-};
+} ValueMap;
 
 typedef struct _GCBucket {
 	Value* current;
-	_GCBucket prev;
-	_GCBucket next;
+	struct _GCBucket* prev;
+	struct _GCBucket* next;
 } GCBucket;
