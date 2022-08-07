@@ -60,7 +60,6 @@ typedef struct _GCBucket {
 	_GCBucket next;
 } GCBucket;
 
-
 typedef struct _VContext {
 	int initialized;
 	Value* global_true;
@@ -78,7 +77,6 @@ typedef struct _VContext {
 
 	GCBucket* gc_universe;
 } VContext;
-
 
 
 Value* vutil_gc_create_new_value(VContext* vctx, char value_type, int sizeof_value) {
