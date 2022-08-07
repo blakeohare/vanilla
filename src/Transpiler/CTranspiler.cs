@@ -437,7 +437,6 @@ namespace Vanilla.Transpiler
             this.TabLevel++;
 
             ApplyExecPrefix();
-            Append("Value* ");
             Append(frl.VarDeclaration.Name);
             Append(" = vutil_get_int(vctx, ");
             Append(iteratorVarName);

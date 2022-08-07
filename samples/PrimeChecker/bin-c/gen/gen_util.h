@@ -108,8 +108,8 @@ Value* vutil_get_boolean(VContext* vctx, int value) {
 
 Value* vutil_get_int(VContext* vctx, int value) {
 	if (value < 1024 && value > -1024) {
-		if (value < 0) return vctx->global_int_pos[value];
-		return vctx->global_int_neg[value];
+		if (value < 0) return vctx->global_int_neg[value];
+		return vctx->global_int_pos[value];
 	}
 
 	if (vctx->mru_int->value == value) return (Value*)vctx->mru_int;
@@ -203,6 +203,29 @@ Value* vutil_get_string_from_chars(VContext* vctx, char* c_string) {
 
 VContext* vutil_initialize_context(int string_table_size) {
 	VContext* vctx = (VContext*)malloc(sizeof(VContext));
+
+	// The booleans need to be initialized manually as the initialization code
+	// add new values to the Garbage Collection Universe, which makes a fast
+	// assumption that at least 2 items already exist in the circularly linked
+	// list.
+	GCBucket* gc_bools[2];
+	for (int i = 0; i < 2; i++) {
+		ValueBoolean* b = (ValueBoolean*)malloc(sizeof(ValueBoolean));
+		Value* vb = (Value*)b;
+		vb->type = 'B';
+		vb->anchors = 0;
+		b->value = i;
+		if (i == 1) vctx->global_true = vb;
+		else vctx->global_false = vb;
+		gc_bools[i] = malloc(sizeof(GCBucket));
+		gc_bools[i]->current = vb;
+	}
+	gc_bools[0]->next = gc_bools[1];
+	gc_bools[0]->prev = gc_bools[1];
+	gc_bools[1]->next = gc_bools[0];
+	gc_bools[1]->prev = gc_bools[0];
+	vctx->gc_universe = gc_bools[0];
+
 	Value** int_pos = (Value**)malloc(sizeof(ValueInt*) * 1024);
 	Value** int_neg = (Value**)malloc(sizeof(ValueInt*) * 1024);
 	for (int i = 0; i < 1024; i++) {
@@ -210,7 +233,7 @@ VContext* vutil_initialize_context(int string_table_size) {
 		((ValueInt*)int_pos[i])->value = i;
 		if (i > 0) {
 			int_neg[i] = vutil_gc_create_new_value(vctx, 'I', sizeof(ValueInt));
-			((ValueInt*)int_pos[i])->value = -i;
+			((ValueInt*)int_neg[i])->value = -i;
 		}
 	}
 	int_neg[0] = int_pos[0];
@@ -218,15 +241,9 @@ VContext* vutil_initialize_context(int string_table_size) {
 	vctx->global_int_neg = int_neg;
 	vctx->global_zero = int_pos[0];
 	vctx->global_one = int_pos[1];
-	for (int i = 0; i <= 1; i++) {
-		Value* b = vutil_gc_create_new_value(vctx, 'B', sizeof(ValueBoolean));
-		((ValueBoolean*)b)->value = i;
-		if (i == 0) vctx->global_false = b;
-		else vctx->global_true = b;
-	}
-	vctx->global_float_zero = vutil_gc_create_new_value(vctx, 'F', sizeof(ValueInt));
+	vctx->global_float_zero = vutil_gc_create_new_value(vctx, 'F', sizeof(ValueFloat));
 	((ValueFloat*)vctx->global_float_zero)->value = 0.0;
-	vctx->global_float_one = vutil_gc_create_new_value(vctx, 'F', sizeof(ValueInt));
+	vctx->global_float_one = vutil_gc_create_new_value(vctx, 'F', sizeof(ValueFloat));
 	((ValueFloat*)vctx->global_float_one)->value = 1.0;
 
 	vctx->mru_int = (ValueInt*)vctx->global_zero;
@@ -235,7 +252,7 @@ VContext* vutil_initialize_context(int string_table_size) {
 	for (int i = 0; i < 128; i++) {
 		ValueString* s = (ValueString*)vutil_gc_create_new_value(vctx, 'S', sizeof(ValueString));
 		s->length = 1;
-		s->hash = 0;
+		s->hash = i;
 		s->c_string = (char*)malloc(sizeof(char) * 2);
 		s->c_string[0] = (char)i;
 		s->c_string[1] = '\0';
@@ -393,7 +410,7 @@ int* vutil_list_to_int_array(Value* vlist, int* size) {
 	int arrSize = 0;
 	Value** values = vutil_list_to_array(vlist, &arrSize);
 	if (size != NULL) *size = arrSize;
-	int* arr = (int**)malloc(sizeof(int) * arrSize);
+	int* arr = (int*)malloc(sizeof(int) * arrSize);
 	for (int i = 0; i < arrSize; i++) {
 		arr[i] = ((ValueInt*)values)->value;
 	}
