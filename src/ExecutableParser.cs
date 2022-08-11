@@ -8,16 +8,20 @@ namespace Vanilla
     internal class ExecutableParser
     {
         private Parser parser;
-        private TokenStream tokens;
+        private TokenStream tokens = null;
         public EntityParser EntParser { get { return this.parser.EntParser; } }
         public ExecutableParser ExecParser { get { return this.parser.ExecParser; } }
         public ExpressionParser ExprParser { get { return this.parser.ExprParser; } }
 
         private static readonly Executable[] EMPTY_CODE_BLOCK = new Executable[0];
 
-        public ExecutableParser(Parser parser, TokenStream tokens)
+        public ExecutableParser(Parser parser)
         {
             this.parser = parser;
+        }
+
+        public void SetTokens(TokenStream tokens)
+        {
             this.tokens = tokens;
         }
 

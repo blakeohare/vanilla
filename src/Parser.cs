@@ -15,23 +15,16 @@ namespace Vanilla
 
         public ParseBundle Parse(string startingFile)
         {
-            TokenStream tokens = Tokenizer.Tokenize(startingFile);
-
-            this.EntParser = new EntityParser(this, tokens);
-            this.ExecParser = new ExecutableParser(this, tokens);
-            this.ExprParser = new ExpressionParser(this, tokens);
-            this.TypeParser = new TypeParser(tokens);
+            this.EntParser = new EntityParser(this);
+            this.ExecParser = new ExecutableParser(this);
+            this.ExprParser = new ExpressionParser(this);
+            this.TypeParser = new TypeParser();
 
             List<TopLevelEntity> entities = new List<TopLevelEntity>();
+            Stack<TokenStream> tokenStack = new Stack<TokenStream>();
+            HashSet<string> filesParsedCanonicalPath = new HashSet<string>();
 
-            while (tokens.HasMore)
-            {
-                TopLevelEntity ent = this.EntParser.ParseEntity();
-                if (ent != null)
-                {
-                    entities.Add(ent);
-                }
-            }
+            this.ParseFile(startingFile, entities, tokenStack, filesParsedCanonicalPath);
 
             Resolver resolver = new Resolver(entities);
             resolver.Resolve();
@@ -44,6 +37,59 @@ namespace Vanilla
                 FieldDefinitions = entities.OfType<Field>().ToArray(),
                 StringDefinitions = resolver.GetAllStringConstantsById().ToArray(),
             };
+        }
+
+        private void ParseFile(
+            string file,
+            List<TopLevelEntity> entitiesOut,
+            Stack<TokenStream> tokenStack,
+            HashSet<string> filesParsedCanonicalPath)
+        {
+            if (filesParsedCanonicalPath.Contains(file)) return;
+            filesParsedCanonicalPath.Add(file);
+
+            TokenStream tokens = Tokenizer.Tokenize(file);
+            this.UpdateParseTokenRefs(tokens);
+            tokenStack.Push(tokens);
+
+            List<ImportStatement> imports = new List<ImportStatement>();
+            while (tokens.HasMore && tokens.PeekValue() == "import")
+            {
+                Token importToken = tokens.PopExpected("import");
+                tokens.EnsureNotEof();
+                StringConstant pathStringExpr = this.ExprParser.ParseExpression() as StringConstant;
+                if (pathStringExpr == null) throw new ParserException(importToken, "import expression must be a string constant.");
+                tokens.PopExpected(";");
+                ImportStatement import = new ImportStatement(importToken, pathStringExpr.Value);
+                imports.Add(import);
+                string filePath = System.IO.Path.Combine(file, "..", import.Path);
+                string absPathComplex = filePath.Replace('/', System.IO.Path.DirectorySeparatorChar).Replace('\\', System.IO.Path.DirectorySeparatorChar);
+                string absPathFlat = System.IO.Path.GetFullPath(absPathComplex);
+                if (!System.IO.File.Exists(absPathFlat))
+                {
+                    throw new ParserException(pathStringExpr, "Import path does not exist: " +  absPathFlat);
+                }
+                this.ParseFile(absPathFlat, entitiesOut, tokenStack, filesParsedCanonicalPath);
+            }
+
+            while (tokens.HasMore)
+            {
+                TopLevelEntity ent = this.EntParser.ParseEntity();
+                if (ent != null)
+                {
+                    entitiesOut.Add(ent);
+                }
+            }
+            tokenStack.Pop();
+            this.UpdateParseTokenRefs(tokenStack.Count > 0 ? tokenStack.Peek() : null);
+        }
+
+        private void UpdateParseTokenRefs(TokenStream tokens)
+        {
+            this.EntParser.SetTokens(tokens);
+            this.ExecParser.SetTokens(tokens);
+            this.ExprParser.SetTokens(tokens);
+            this.TypeParser.SetTokens(tokens);
         }
     }
 }

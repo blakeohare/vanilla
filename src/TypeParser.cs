@@ -4,9 +4,13 @@ namespace Vanilla
 {
     internal class TypeParser
     {
-        private TokenStream tokens;
+        private TokenStream tokens = null;
 
-        public TypeParser(TokenStream tokens)
+        public TypeParser()
+        {
+        }
+
+        public void SetTokens(TokenStream tokens)
         {
             this.tokens = tokens;
         }

@@ -7,15 +7,19 @@ namespace Vanilla
     internal class EntityParser
     {
         private Parser parser;
-        private TokenStream tokens;
+        private TokenStream tokens = null;
         public EntityParser EntParser { get { return this.parser.EntParser; } }
         public ExecutableParser ExecParser { get { return this.parser.ExecParser; } }
         public ExpressionParser ExprParser { get { return this.parser.ExprParser; } }
         public TypeParser TypeParser { get { return this.parser.TypeParser; } }
 
-        public EntityParser(Parser parser, TokenStream tokens)
+        public EntityParser(Parser parser)
         {
             this.parser = parser;
+        }
+
+        public void SetTokens(TokenStream tokens)
+        {
             this.tokens = tokens;
         }
 

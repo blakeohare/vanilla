@@ -21,18 +21,17 @@ namespace Vanilla
         private OpChainParser additionParser;
         private OpChainParser multiplicationParser;
 
-        public ExpressionParser(Parser parser, TokenStream tokens)
+        public ExpressionParser(Parser parser)
         {
             this.parser = parser;
-            this.tokens = tokens;
 
-            this.boolComboParser = new OpChainParser(tokens, "&& ||".Split(' '));
-            this.bitwiseParser = new OpChainParser(tokens, "& | ^".Split(' '));
-            this.equalityParser = new OpChainParser(tokens, "== !=".Split(' '));
-            this.inequalityParser = new OpChainParser(tokens, "< > <= >=".Split(' '));
-            this.bitShiftParser = new OpChainParser(tokens, "<< >>".Split(' '));
-            this.additionParser = new OpChainParser(tokens, "+ -".Split(' '));
-            this.multiplicationParser = new OpChainParser(tokens, "* / %".Split(' '));
+            this.boolComboParser = new OpChainParser("&& ||".Split(' '));
+            this.bitwiseParser = new OpChainParser("& | ^".Split(' '));
+            this.equalityParser = new OpChainParser("== !=".Split(' '));
+            this.inequalityParser = new OpChainParser("< > <= >=".Split(' '));
+            this.bitShiftParser = new OpChainParser("<< >>".Split(' '));
+            this.additionParser = new OpChainParser("+ -".Split(' '));
+            this.multiplicationParser = new OpChainParser("* / %".Split(' '));
 
             this.boolComboParser.NextParser = this.bitwiseParser.Parse;
             this.bitwiseParser.NextParser = this.equalityParser.Parse;
@@ -44,6 +43,11 @@ namespace Vanilla
 
         }
 
+        public void SetTokens(TokenStream tokens)
+        {
+            this.tokens = tokens;
+        }
+
         public Expression ParseExpression()
         {
             return this.ParseTernary();
@@ -51,7 +55,7 @@ namespace Vanilla
 
         private Expression ParseTernary()
         {
-            Expression root = this.boolComboParser.Parse();
+            Expression root = this.boolComboParser.Parse(this.tokens);
             if (tokens.PopIfPresent("?"))
             {
                 Expression trueExpr = this.ParseTernary();
@@ -62,18 +66,18 @@ namespace Vanilla
             return root;
         }
 
-        private Expression ParseUnary()
+        private Expression ParseUnary(TokenStream tokens)
         {
             if (tokens.IsNext("!"))
             {
                 Token notToken = tokens.Pop();
-                return new BooleanNot(notToken, this.ParseUnary());
+                return new BooleanNot(notToken, this.ParseUnary(tokens));
             }
 
             if (tokens.IsNext("-"))
             {
                 Token minusToken = tokens.Pop();
-                return new Negative(minusToken, this.ParseUnary());
+                return new Negative(minusToken, this.ParseUnary(tokens));
             }
 
             return this.ParseIncrement();
@@ -327,19 +331,17 @@ namespace Vanilla
 
         private class OpChainParser
         {
-            public Func<Expression> NextParser { get; set; }
-            private TokenStream tokens;
+            public Func<TokenStream, Expression> NextParser { get; set; }
             private HashSet<string> ops;
 
-            public OpChainParser(TokenStream tokens, ICollection<string> ops)
+            public OpChainParser(ICollection<string> ops)
             {
-                this.tokens = tokens;
                 this.ops = new HashSet<string>(ops);
             }
 
-            public Expression Parse()
+            public Expression Parse(TokenStream tokens)
             {
-                Expression expr = this.NextParser();
+                Expression expr = this.NextParser(tokens);
                 if (tokens.HasMore && this.ops.Contains(tokens.PeekValue()))
                 {
                     List<Expression> expressions = new List<Expression>() { expr };
@@ -347,7 +349,7 @@ namespace Vanilla
                     while (tokens.HasMore && this.ops.Contains(tokens.PeekValue()))
                     {
                         ops.Add(tokens.Pop());
-                        expressions.Add(this.NextParser());
+                        expressions.Add(this.NextParser(tokens));
                     }
                     expr = new OpChain(expressions, ops);
                 }
