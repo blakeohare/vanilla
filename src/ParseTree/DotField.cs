@@ -1,4 +1,6 @@
-﻿namespace Vanilla.ParseTree
+﻿using System.Linq;
+
+namespace Vanilla.ParseTree
 {
     internal class DotField : Expression
     {
@@ -6,6 +8,7 @@
         public Token DotToken { get; private set; }
         public Token FieldToken { get; private set; }
         public string FieldName { get; private set; }
+        public TopLevelEntity ResolvedMember { get; private set; }
 
         public DotField(Expression root, Token dotToken, Token fieldToken) : base(root.FirstToken)
         {
@@ -13,6 +16,7 @@
             this.DotToken = dotToken;
             this.FieldToken = fieldToken;
             this.FieldName = fieldToken.Value;
+            this.ResolvedMember = null;
         }
 
         public override Expression ResolveVariables(Resolver resolver, LexicalScope scope)
@@ -48,7 +52,33 @@
             else
             {
                 Type rootType = this.Root.ResolvedType;
-                this.ResolvedType = this.GetPrimitiveFieldType(rootType, rootType.RootType + "." + this.FieldName);
+                if (rootType.IsClass)
+                {
+                    TopLevelEntity member = rootType.ResolvedClass.GetMemberWithInheritance(this.FieldName);
+                    if (member == null)
+                    {
+                        throw new ParserException(this.FieldToken, "The class " + rootType.ResolvedClass.Name + " does not have a member named " + this.FieldName);
+                    }
+                    this.ResolvedMember = member;
+                    if (member is FunctionDefinition)
+                    {
+                        FunctionDefinition fd = member as FunctionDefinition;
+                        this.ResolvedType = Type.GetFunctionType(fd.ReturnType, fd.Args.Select(arg => arg.Type).ToArray());
+                    }
+                    else if (member is Field)
+                    {
+                        Field f = member as Field;
+                        this.ResolvedType = f.Type;
+                    }
+                    else
+                    {
+                        throw new System.NotImplementedException();
+                    }
+                }
+                else
+                {
+                    this.ResolvedType = this.GetPrimitiveFieldType(rootType, rootType.RootType + "." + this.FieldName);
+                }
                 this.ResolvedType.Resolve(resolver);
             }
             return this;

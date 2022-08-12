@@ -16,12 +16,22 @@ namespace Vanilla.ParseTree
 
         public override Expression ResolveVariables(Resolver resolver, LexicalScope scope)
         {
-            throw new System.NotImplementedException();
+            for (int i = 0; i < this.Args.Length; i++)
+            {
+                this.Args[i] = this.Args[i].ResolveVariables(resolver, scope);
+            }
+            return this;
         }
 
         public override Expression ResolveTypes(Resolver resolver)
         {
-            throw new System.NotImplementedException();
+            for (int i = 0; i < this.Args.Length; i++)
+            {
+                this.Args[i] = this.Args[i].ResolveTypes(resolver);
+            }
+            this.ResolvedType = Type.GetInstanceType(this.ClassNameToken.Value);
+            this.ResolvedType.Resolve(resolver);
+            return this;
         }
     }
 }

@@ -61,6 +61,7 @@ namespace Vanilla.ParseTree
         public override Expression ResolveTypes(Resolver resolver)
         {
             this.ResolveArgTypes(resolver);
+            this.Root.ResolveTypes(resolver);
 
             if (this.Root is DotField)
             {
@@ -69,7 +70,7 @@ namespace Vanilla.ParseTree
                 df.Root = df.Root.ResolveTypes(resolver);
                 Type rootType = df.Root.ResolvedType;
                 string signature;
-                SystemFunctionInvocation sfi;
+                SystemFunctionInvocation sfi = null;
                 Type resolvedType;
                 if (df.Root is TypeRootedExpression)
                 {
@@ -104,12 +105,29 @@ namespace Vanilla.ParseTree
                         resolvedType = Type.GetArrayType(rootType.Generics[0]);
                         break;
 
-                    default: throw new System.NotImplementedException();
+                    default:
+                        if (rootType.IsClass)
+                        {
+                            TopLevelEntity member = rootType.ResolvedClass.GetMemberWithInheritance(fieldName);
+                            FunctionDefinition method =  member as FunctionDefinition;
+                            if (method == null) throw new ParserException(this.OpenParen, "This is not a function or method and cannot be invoked as such");
+                            resolvedType = method.ReturnType;
+                            this.EnsureArgsCompatible(method);
+                            break;
+                        }
+                        else
+                        {
+                            throw new System.NotImplementedException();
+                        }
                 }
 
-                sfi.ResolvedType = resolvedType;
-                sfi.EnsureArgsCompatible();
-                return sfi;
+                if (sfi != null) {
+                    sfi.ResolvedType = resolvedType;
+                    sfi.EnsureArgsCompatible();
+                    return sfi;
+                }
+
+                return this;
             }
             else if (this.Root is SystemFunction)
             {
@@ -142,6 +160,31 @@ namespace Vanilla.ParseTree
             else
             {
                 throw new System.NotImplementedException();
+            }
+        }
+
+        private void EnsureArgsCompatible(FunctionDefinition funcDef)
+        {
+            if (funcDef.Args.Length != this.ArgList.Length)
+            {
+                throw new ParserException(this.OpenParen, "Incorrect argument count. Expected " + funcDef.Args.Length + " but found " + this.ArgList.Length + " instead.");
+            }
+            int argc = this.ArgList.Length;
+            for (int i = 0; i < argc; i++)
+            {
+                Type expectedType = funcDef.Args[i].Type;
+                Type actualType = this.ArgList[i].ResolvedType;
+                if (expectedType.AssignableFrom(actualType))
+                {
+                    if (expectedType.IsFloat && actualType.IsInteger)
+                    {
+                        throw new ParserException(this.ArgList[i].FirstToken, "TODO: casting int to float");
+                    }
+                }
+                else
+                {
+                    throw new ParserException(this.ArgList[i].FirstToken, "Incompatible argument types. Cannot assign a " + actualType + " to a " + expectedType + "."); // TODO: implement the ToString.
+                }
             }
         }
 

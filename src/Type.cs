@@ -77,6 +77,11 @@ namespace Vanilla
             return new Type() { FirstToken = null, Generics = new Type[] { keyType, valueType }, RootType = "map" };
         }
 
+        public static Type GetInstanceType(string className)
+        {
+            return new Type() { FirstToken = null, RootType = className, IsClass = true };
+        }
+
         public void Resolve(Resolver resolver)
         {
             if (this.IsResolved) return;

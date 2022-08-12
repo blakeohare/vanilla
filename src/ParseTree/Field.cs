@@ -12,8 +12,8 @@
         {
             this.Type = type;
             this.NameToken = fieldNameToken;
-            this.Name = Name;
-            this.IsStatic = fieldToken.Value == "static";
+            this.Name = this.NameToken.Value;
+            this.IsStatic = this.Name == "static";
         }
     }
 }

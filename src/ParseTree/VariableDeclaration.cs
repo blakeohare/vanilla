@@ -30,6 +30,7 @@
 
         public override void ResolveTypes(Resolver resolver)
         {
+            this.Type.Resolve(resolver);
             if (this.InitialValue != null)
             {
                 this.InitialValue = this.InitialValue.ResolveTypes(resolver);
