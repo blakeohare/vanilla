@@ -40,14 +40,13 @@ namespace Vanilla.ParseTree
         public void ResolveVariables(Resolver resolver)
         {
             LexicalScope rootScope = new LexicalScope(null);
+
+            // The arguments are directly in the root scope rather than creating a new one and setting its parent to it.
+            // This intentionally will cause redeclaration of the args to induce a compile error.
             foreach (VariableDeclaration arg in this.Args)
             {
                 rootScope.AddDefinition(arg);
             }
-
-            // The arguments are directly in the root scope rather than creating a new one and setting its parent to it.
-            // This intentionally will cause redeclaration of the args to induce a compile error.
-
             foreach (Executable line in this.Body)
             {
                 line.ResolveVariables(resolver, rootScope);

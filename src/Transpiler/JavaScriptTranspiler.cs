@@ -225,10 +225,10 @@ namespace Vanilla.Transpiler
             Append(cd.Name);
 
             Append(" = (_this");
-            for (int i = 0; i < ctor.ArgNames.Length; i++)
+            for (int i = 0; i < ctor.Args.Length; i++)
             {
                 Append(", ");
-                Append(ctor.ArgNames[i].Value);
+                Append(ctor.Args[i].Name);
             }
             Append(") => {");
             Append(this.NL);

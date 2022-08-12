@@ -5,9 +5,7 @@ namespace Vanilla.ParseTree
 {
     internal class ConstructorDefinition : TopLevelEntity
     {
-        public Token[] ArgDeclarations { get; private set; }
-        public Type[] ArgTypes { get; private set; }
-        public Token[] ArgNames { get; private set; }
+        public VariableDeclaration[] Args { get; private set; }
         public Token BaseToken { get; private set; }
         public Expression[] BaseArgs { get; set; }
         public Executable[] Body { get; set; }
@@ -15,35 +13,35 @@ namespace Vanilla.ParseTree
         public ConstructorDefinition(Token constructorToken, IList<Token> argDeclarations, IList<Type> argTypes, IList<Token> argNames, Token baseToken)
             : base(constructorToken)
         {
-            this.ArgDeclarations = argDeclarations.ToArray();
-            this.ArgTypes = argTypes.ToArray();
-            this.ArgNames = argNames.ToArray();
+            int argc = argNames.Count;
+            List<VariableDeclaration> args = new List<VariableDeclaration>();
+            for (int i = 0; i < argc; i++)
+            {
+                VariableDeclaration argDec = new VariableDeclaration(this, argDeclarations[i], argTypes[i], argNames[i], null, null);
+            }
+            this.Args = args.ToArray();
             this.BaseToken = baseToken;
             this.BaseArgs = new Expression[0];
         }
 
         public void ResolveArgTypes(Resolver resolver)
         {
-            for (int i = 0; i < this.ArgTypes.Length; i++)
+            for (int i = 0; i < this.Args.Length; i++)
             {
-                this.ArgTypes[i].Resolve(resolver);
+                this.Args[i].Type.Resolve(resolver);
             }
         }
 
         public void ResolveVariables(Resolver resolver)
         {
             LexicalScope rootScope = new LexicalScope(null);
-            throw new System.NotImplementedException();
-            /*
-            // TODO: the args need to be variable declarations, like FunctionDefinition
-            foreach (VariableDeclaration arg in this.ArgDeclarations)
-            {
-                rootScope.AddDefinition(arg);
-            }*/
 
             // The arguments are directly in the root scope rather than creating a new one and setting its parent to it.
             // This intentionally will cause redeclaration of the args to induce a compile error.
-
+            foreach (VariableDeclaration arg in this.Args)
+            {
+                rootScope.AddDefinition(arg);
+            }
             foreach (Executable line in this.Body)
             {
                 line.ResolveVariables(resolver, rootScope);
