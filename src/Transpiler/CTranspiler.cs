@@ -269,7 +269,7 @@ namespace Vanilla.Transpiler
             }
         }
 
-        protected override void SerializeBasicFunctionInvocation(Expression root, Expression[] args, bool useWrap)
+        protected override void SerializeMethodInvocation(Expression root, string methodName, Expression[] args, bool useWrap)
         {
             if (root is FunctionReference)
             {
@@ -285,6 +285,16 @@ namespace Vanilla.Transpiler
             {
                 throw new ParserException(root, "Not implemented yet");
             }
+        }
+
+        protected override void SerializeConstructor(ConstructorDefinition ctor)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        protected override void SerializeConstructorInvocation(ConstructorInvocation ctorInvoke)
+        {
+            throw new System.NotImplementedException();
         }
 
         protected override void SerializeIntegerConstant(IntegerConstant ic, bool useWrap)

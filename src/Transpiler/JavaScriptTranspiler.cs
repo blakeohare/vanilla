@@ -193,9 +193,25 @@ namespace Vanilla.Transpiler
             }
         }
 
-        protected override void SerializeBasicFunctionInvocation(Expression root, Expression[] args, bool useWrap)
+        protected override void SerializeConstructor(ConstructorDefinition ctor)
         {
             throw new System.NotImplementedException();
+        }
+
+        protected override void SerializeMethodInvocation(Expression root, string methodName, Expression[] args, bool useWrap)
+        {
+            Append("mt_");
+            Append(root.ResolvedType.ResolvedClass.Name);
+            Append('_');
+            Append(methodName);
+            Append('(');
+            SerializeExpression(root, true);
+            for (int i = 0; i < args.Length; i++)
+            {
+                Append(", ");
+                SerializeExpression(args[i], true);
+            }
+            Append(')');
         }
 
         protected override void SerializeExpressionAsExecutable(ExpressionAsExecutable exex, bool omitSemicolon)
@@ -239,6 +255,20 @@ namespace Vanilla.Transpiler
             Append(this.CurrentTab);
             Append('}');
             Append(this.NL);
+        }
+
+        protected override void SerializeConstructorInvocation(ConstructorInvocation ctorInvoke)
+        {
+            ClassDefinition cd = ctorInvoke.ResolvedType.ResolvedClass;
+            Append("ctor_");
+            Append(cd.Name);
+            Append("(");
+            for (int i = 0; i < ctorInvoke.Args.Length; i++)
+            {
+                if (i > 0) Append(", ");
+                SerializeExpression(ctorInvoke.Args[i], true);
+            }
+            Append(')');
         }
 
         protected override void SerializeForRangeLoop(ForRangeLoop frl)

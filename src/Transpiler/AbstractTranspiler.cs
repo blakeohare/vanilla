@@ -85,6 +85,16 @@ namespace Vanilla.Transpiler
                 }
             }
 
+            foreach (ClassDefinition cd in classes)
+            {
+                ConstructorDefinition ctor = cd.Members.OfType<ConstructorDefinition>().First();
+                this.SerializeConstructor(ctor);
+                foreach (FunctionDefinition method in cd.Members.OfType<FunctionDefinition>())
+                {
+                    this.SerializeFunction(method);
+                }
+            }
+
             foreach (FunctionDefinition fd in functions)
             {
                 this.SerializeFunction(fd);
@@ -96,8 +106,9 @@ namespace Vanilla.Transpiler
         protected abstract void SerializeAssignmentToVariable(Variable target, Assignment asgn, bool omitSemicolon);
         protected abstract void SerializeAssignmentToMap(MapAccess target, Assignment asgn, bool omitSemicolon);
         protected abstract void SerializeAssignmentToField(DotField target, Assignment asgn, bool omitSemicolon);
-        protected abstract void SerializeBasicFunctionInvocation(Expression root, Expression[] args, bool useWrap);
         protected abstract void SerializeBooleanConstant(BooleanConstant bc, bool useWrap);
+        protected abstract void SerializeConstructor(ConstructorDefinition ctor);
+        protected abstract void SerializeConstructorInvocation(ConstructorInvocation ctorInvoke);
         protected abstract void SerializeExpressionAsExecutable(ExpressionAsExecutable exex, bool omitSemicolon);
         protected abstract void SerializeForLoop(ForLoop floop);
         protected abstract void SerializeForRangeLoop(ForRangeLoop frl);
@@ -107,6 +118,7 @@ namespace Vanilla.Transpiler
         protected abstract void SerializeIntegerConstant(IntegerConstant ic, bool useWrap);
         protected abstract void SerializeLocalFunctionInvocation(LocalFunctionInvocation lfi, bool useWrap);
         protected abstract void SerializeMapAccess(MapAccess ma, bool useWrap);
+        protected abstract void SerializeMethodInvocation(Expression root, string methodName, Expression[] args, bool useWrap);
         protected abstract void SerializePairComparision(PairComparison pc, bool useWrap);
         protected abstract void SerializeReturnStatement(ReturnStatement rs);
         protected abstract void SerializeStringConstant(StringConstant sc, bool useWrap);
@@ -174,6 +186,11 @@ namespace Vanilla.Transpiler
 
                 case "OpChain": throw new Exception(); // OpChains should be resolved at this point into more specific types
 
+                case "ConstructorInvocation":
+                    if (!useWrap) throw new Exception(); // should not happen
+                    this.SerializeConstructorInvocation((ConstructorInvocation)expr);
+                    break;
+
                 default: throw new NotImplementedException();
             }
         }
@@ -225,15 +242,15 @@ namespace Vanilla.Transpiler
                         throw new System.NotImplementedException();
                 }
             }
+            else if (inv.Root is DotField)
+            {
+                DotField df = (DotField)inv.Root;
+                this.SerializeMethodInvocation(df.Root, df.FieldName, inv.ArgList, useWrap);
+            }
             else
             {
-                this.SerializeBasicFunctionInvocation(inv.Root, inv.ArgList, useWrap);
+                throw new System.NotImplementedException();
             }
-        }
-
-        private void SerializeOpChain(OpChain oc, bool useWrap)
-        {
-            throw new Exception(); // OpChains should be resolved at this point into more specific types
         }
 
         private void SerializeSystemFunctionInvocation(SystemFunctionInvocation sfi, bool useWrap)
