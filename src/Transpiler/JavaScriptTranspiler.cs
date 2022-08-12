@@ -120,15 +120,29 @@ namespace Vanilla.Transpiler
             if (useWrap || !usingHelperFunction) Append(')');
         }
 
-        protected override void SerializeAssignmentToField(DotField target, Assignment asgn, bool omitSemicolon)
+        protected override void SerializeAssignmentToField(DotField target, Assignment asgn, bool omitSemicolon, bool floatCast)
         {
             string op = asgn.Op.Value;
             if (!omitSemicolon) ApplyExecPrefix();
-            throw new System.NotImplementedException();
-            // if (!omitSemicolon) ApplyExecSuffix();
+
+            SerializeExpression(target.Root, false);
+            Append(".f_" + target.FieldName);
+            Append(" = ");
+            if (floatCast)
+            {
+                Append("vutilGetFloat(");
+                SerializeExpression(asgn.Value, false);
+                Append(')');
+            }
+            else
+            {
+                SerializeExpression(asgn.Value, true);
+            }
+
+            if (!omitSemicolon) ApplyExecSuffix();
         }
 
-        protected override void SerializeAssignmentToMap(MapAccess ma, Assignment asgn, bool omitSemicolon)
+        protected override void SerializeAssignmentToMap(MapAccess ma, Assignment asgn, bool omitSemicolon, bool floatCast)
         {
             string op = asgn.Op.Value;
             if (!omitSemicolon) ApplyExecPrefix();
@@ -145,7 +159,7 @@ namespace Vanilla.Transpiler
             if (!omitSemicolon) ApplyExecSuffix();
         }
 
-        protected override void SerializeAssignmentToVariable(Variable v, Assignment asgn, bool omitSemicolon)
+        protected override void SerializeAssignmentToVariable(Variable v, Assignment asgn, bool omitSemicolon, bool floatCast)
         {
             string op = asgn.Op.Value;
             if (!omitSemicolon) ApplyExecPrefix();
@@ -154,7 +168,16 @@ namespace Vanilla.Transpiler
 
             if (op == "=")
             {
-                SerializeExpression(asgn.Value, true);
+                if (floatCast)
+                {
+                    Append("vutilGetFloat(");
+                    SerializeExpression(asgn.Value, false);
+                    Append(')');
+                }
+                else
+                {
+                    SerializeExpression(asgn.Value, true);
+                }
             }
             else
             {
@@ -195,7 +218,28 @@ namespace Vanilla.Transpiler
 
         protected override void SerializeConstructor(ConstructorDefinition ctor)
         {
-            throw new System.NotImplementedException();
+            ClassDefinition cd = ctor.WrapperClass;
+            ApplyExecPrefix();
+            Append("const ");
+            Append("ctor_");
+            Append(cd.Name);
+
+            Append(" = (_this");
+            for (int i = 0; i < ctor.ArgNames.Length; i++)
+            {
+                Append(", ");
+                Append(ctor.ArgNames[i].Value);
+            }
+            Append(") => {");
+            Append(this.NL);
+            this.TabLevel++;
+
+            SerializeExecutables(ctor.Body);
+            this.TabLevel--;
+            Append(this.CurrentTab);
+            Append("};");
+            Append(this.NL);
+            Append(this.NL);
         }
 
         protected override void SerializeMethodInvocation(Expression root, string methodName, Expression[] args, bool useWrap)
@@ -263,9 +307,14 @@ namespace Vanilla.Transpiler
             Append("ctor_");
             Append(cd.Name);
             Append("(");
+            Append("vutilNewInstance('");
+            Append(cd.Name);
+            Append(", " + cd.FlattenedMemberCount);
+            Append(')');
+
             for (int i = 0; i < ctorInvoke.Args.Length; i++)
             {
-                if (i > 0) Append(", ");
+                Append(", ");
                 SerializeExpression(ctorInvoke.Args[i], true);
             }
             Append(')');

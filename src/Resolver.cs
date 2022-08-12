@@ -95,6 +95,7 @@ namespace Vanilla
             foreach (ClassDefinition cd in this.allClasses)
             {
                 functions.AddRange(cd.Members.OfType<FunctionDefinition>());
+                cd.Constructor.ResolveVariables(this);
             }
 
             foreach (FunctionDefinition fd in functions)
@@ -119,6 +120,10 @@ namespace Vanilla
             {
                 fd.ResolveSignatureTypes(this);
             }
+            foreach (ClassDefinition cd in this.allClasses)
+            {
+                cd.Constructor.ResolveArgTypes(this);
+            }
         }
 
         private void ResolveTypes()
@@ -128,6 +133,11 @@ namespace Vanilla
             foreach (FunctionDefinition fd in AllFunctionsIncludingNested())
             {
                 fd.ResolveTypes(this);
+            }
+
+            foreach (ClassDefinition cd in this.allClasses)
+            {
+                cd.Constructor.ResolveTypes(this);
             }
         }
 

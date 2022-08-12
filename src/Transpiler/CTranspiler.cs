@@ -177,7 +177,7 @@ namespace Vanilla.Transpiler
             Append(NL);
         }
 
-        protected override void SerializeAssignmentToField(DotField df, Assignment asgn, bool omitSemicolon)
+        protected override void SerializeAssignmentToField(DotField df, Assignment asgn, bool omitSemicolon, bool floatCast)
         {
             string op = asgn.Op.Value;
             if (!omitSemicolon) ApplyExecPrefix();
@@ -185,7 +185,7 @@ namespace Vanilla.Transpiler
             // if (!omitSemicolon) ApplyExecSuffix();
         }
 
-        protected override void SerializeAssignmentToMap(MapAccess ma, Assignment asgn, bool omitSemicolon)
+        protected override void SerializeAssignmentToMap(MapAccess ma, Assignment asgn, bool omitSemicolon, bool floatCast)
         {
             string op = asgn.Op.Value;
             if (!omitSemicolon) ApplyExecPrefix();
@@ -202,7 +202,7 @@ namespace Vanilla.Transpiler
             if (!omitSemicolon) ApplyExecSuffix();
         }
 
-        protected override void SerializeAssignmentToVariable(Variable v, Assignment asgn, bool omitSemicolon)
+        protected override void SerializeAssignmentToVariable(Variable v, Assignment asgn, bool omitSemicolon, bool floatCast)
         {
             string op = asgn.Op.Value;
             if (!omitSemicolon) ApplyExecPrefix();

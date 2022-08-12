@@ -103,9 +103,9 @@ namespace Vanilla.Transpiler
         }
 
         protected abstract void SerializeArithmeticPairOp(ArithmeticPairOp apo, bool useWrap);
-        protected abstract void SerializeAssignmentToVariable(Variable target, Assignment asgn, bool omitSemicolon);
-        protected abstract void SerializeAssignmentToMap(MapAccess target, Assignment asgn, bool omitSemicolon);
-        protected abstract void SerializeAssignmentToField(DotField target, Assignment asgn, bool omitSemicolon);
+        protected abstract void SerializeAssignmentToVariable(Variable target, Assignment asgn, bool omitSemicolon, bool floatCast);
+        protected abstract void SerializeAssignmentToMap(MapAccess target, Assignment asgn, bool omitSemicolon, bool floatCast);
+        protected abstract void SerializeAssignmentToField(DotField target, Assignment asgn, bool omitSemicolon, bool floatCast);
         protected abstract void SerializeBooleanConstant(BooleanConstant bc, bool useWrap);
         protected abstract void SerializeConstructor(ConstructorDefinition ctor);
         protected abstract void SerializeConstructorInvocation(ConstructorInvocation ctorInvoke);
@@ -141,17 +141,20 @@ namespace Vanilla.Transpiler
                 case "Assignment":
                     // Maybe this should be in the resolver?
                     Assignment asgn = (Assignment)ex;
+                    Type targetType = asgn.Target.ResolvedType;
+                    Type valueType = asgn.Value.ResolvedType;
+                    bool floatCast = targetType.IsFloat && valueType.IsInteger;
                     if (asgn.Target is Variable)
                     {
-                        this.SerializeAssignmentToVariable((Variable)asgn.Target, asgn, omitSemicolon);
+                        this.SerializeAssignmentToVariable((Variable)asgn.Target, asgn, omitSemicolon, floatCast);
                     }
                     else if (asgn.Target is MapAccess)
                     {
-                        this.SerializeAssignmentToMap((MapAccess)asgn.Target, asgn, omitSemicolon);
+                        this.SerializeAssignmentToMap((MapAccess)asgn.Target, asgn, omitSemicolon, floatCast);
                     }
                     else if (asgn.Target is DotField)
                     {
-                        this.SerializeAssignmentToField((DotField)asgn.Target, asgn, omitSemicolon);
+                        this.SerializeAssignmentToField((DotField)asgn.Target, asgn, omitSemicolon, floatCast);
                     }
                     else
                     {

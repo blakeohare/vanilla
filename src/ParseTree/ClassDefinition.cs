@@ -8,6 +8,8 @@ namespace Vanilla.ParseTree
         public Token ClassToken { get; private set; }
         public Token NameToken { get; private set; }
         public string Name { get; private set; }
+        public int FlattenedMemberCount { get { return this.Members.Length; } }
+        public ConstructorDefinition Constructor { get; private set; }
 
         public TopLevelEntity[] Members { get; private set; }
 
@@ -24,6 +26,38 @@ namespace Vanilla.ParseTree
         {
             this.directMemberLookup = null;
             this.Members = members.ToArray();
+
+            ConstructorDefinition[] ctors = this.Members.OfType<ConstructorDefinition>().ToArray();
+            if (ctors.Length != 1)
+            {
+                if (ctors.Length == 0) throw new ParserException(this, "The class '" + this.Name + "' is missing a constructor.");
+                throw new ParserException(this, "The class '" + this.Name + "' has multiple constructors.");
+            }
+            ConstructorDefinition ctor = ctors[0];
+            this.Constructor = ctor;
+        }
+
+        private Dictionary<string, int> memberOffsetId = null;
+        public int GetMemberOffsetId(string name)
+        {
+            // TODO: check base class
+            if (memberOffsetId == null)
+            {
+                Field[] fields = this.Members.OfType<Field>().OrderBy(f => f.Name).ToArray();
+                FunctionDefinition[] funcs = this.Members.OfType<FunctionDefinition>().OrderBy(fn => fn.Name).ToArray();
+                int id = 2;
+                this.memberOffsetId = new Dictionary<string, int>();
+                foreach (Field f in fields)
+                {
+                    this.memberOffsetId[f.Name] = id++;
+                }
+                foreach (FunctionDefinition fn in funcs)
+                {
+                    this.memberOffsetId[fn.Name] = id++;
+                }
+            }
+            if (memberOffsetId.ContainsKey(name)) throw new System.Exception(); // should not happen.
+            return memberOffsetId[name];
         }
 
         public TopLevelEntity GetMemberWithInheritance(string name)
