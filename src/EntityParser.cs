@@ -76,6 +76,7 @@ namespace Vanilla
             while (!tokens.IsNext("}") && tokens.HasMore)
             {
                 TopLevelEntity mem = this.ParseClassMember(cd);
+                mem.WrapperClass = cd;
                 members.Add(mem);
             }
 
@@ -108,15 +109,19 @@ namespace Vanilla
             Token fieldName = tokens.PopNonNull();
             if (fieldName.Type != TokenType.WORD) throw new ParserException(fieldName, "Expected field name");
 
+            Field f = new Field(fieldToken, type, fieldName);
+
             Expression startingValue = null;
             if (!tokens.PopIfPresent(";"))
             {
                 tokens.PopExpected("=");
-                startingValue = this.ExprParser.ParseExpression();
+                startingValue = this.ExprParser.ParseExpression(f);
                 tokens.PopExpected(";");
             }
+            
+            f.StartingValue = startingValue;
 
-            return new Field(fieldToken, type, fieldName, startingValue);
+            return f;
         }
 
         private TopLevelEntity ParseConstructor()
@@ -125,6 +130,8 @@ namespace Vanilla
             ArgumentList args = ArgumentList.Parse(tokens, this.TypeParser);
             Token baseToken = null;
             List<Expression> baseArgs = new List<Expression>();
+            ConstructorDefinition cd = new ConstructorDefinition(constructorToken, args.ArgDeclarations, args.ArgTypes, args.ArgNames, baseToken);
+
             if (tokens.PopIfPresent(":"))
             {
                 baseToken = tokens.PopExpected("base");
@@ -133,11 +140,10 @@ namespace Vanilla
                 while (!tokens.PopIfPresent(")"))
                 {
                     if (baseArgs.Count > 0) tokens.PopExpected(",");
-                    baseArgs.Add(this.ExprParser.ParseExpression());
+                    baseArgs.Add(this.ExprParser.ParseExpression(cd));
                 }
+                cd.BaseArgs = baseArgs.ToArray();
             }
-
-            ConstructorDefinition cd = new ConstructorDefinition(constructorToken, args.ArgDeclarations, args.ArgTypes, args.ArgNames, baseToken, baseArgs);
 
             cd.Body = this.ExecParser.ParseCodeBlock(cd, true);
 
@@ -166,7 +172,7 @@ namespace Vanilla
             bool nextAllowed = true;
             List<Token> memberNames = new List<Token>();
             List<Expression> memberValues = new List<Expression>();
-
+            EnumDefinition enumDef = new EnumDefinition(enumToken, nameToken);
             while (!tokens.PopIfPresent("}"))
             {
                 if (!nextAllowed) tokens.PopExpected("}"); // throws
@@ -176,15 +182,17 @@ namespace Vanilla
                 Expression memberValue = null;
                 if (tokens.PopIfPresent("="))
                 {
-                    memberValue = this.ExprParser.ParseExpression();
+                    memberValue = this.ExprParser.ParseExpression(enumDef);
                 }
                 nextAllowed = tokens.PopIfPresent(",");
 
                 memberNames.Add(memberName);
                 memberValues.Add(memberValue);
             }
+            enumDef.MemberNameTokens = memberNames.ToArray();
+            enumDef.MemberValues = memberValues.ToArray();
 
-            return new EnumDefinition(enumToken, nameToken, memberNames, memberValues);
+            return enumDef;
         }
 
         private class ArgumentList

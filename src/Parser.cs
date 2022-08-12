@@ -57,7 +57,7 @@ namespace Vanilla
             {
                 Token importToken = tokens.PopExpected("import");
                 tokens.EnsureNotEof();
-                StringConstant pathStringExpr = this.ExprParser.ParseExpression() as StringConstant;
+                StringConstant pathStringExpr = this.ExprParser.ParseExpression(null) as StringConstant;
                 if (pathStringExpr == null) throw new ParserException(importToken, "import expression must be a string constant.");
                 tokens.PopExpected(";");
                 ImportStatement import = new ImportStatement(importToken, pathStringExpr.Value);

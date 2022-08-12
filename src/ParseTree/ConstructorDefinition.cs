@@ -9,17 +9,16 @@ namespace Vanilla.ParseTree
         public Type[] ArgTypes { get; private set; }
         public Token[] ArgNames { get; private set; }
         public Token BaseToken { get; private set; }
-        public Expression[] BaseArgs { get; private set; }
+        public Expression[] BaseArgs { get; set; }
         public Executable[] Body { get; set; }
 
-        public ConstructorDefinition(Token constructorToken, IList<Token> argDeclarations, IList<Type> argTypes, IList<Token> argNames, Token baseToken, IList<Expression> baseArgs)
+        public ConstructorDefinition(Token constructorToken, IList<Token> argDeclarations, IList<Type> argTypes, IList<Token> argNames, Token baseToken)
             : base(constructorToken)
         {
             this.ArgDeclarations = argDeclarations.ToArray();
             this.ArgTypes = argTypes.ToArray();
             this.ArgNames = argNames.ToArray();
             this.BaseToken = baseToken;
-            this.BaseArgs = baseArgs.ToArray();
         }
     }
 }

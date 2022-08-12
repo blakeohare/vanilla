@@ -77,13 +77,13 @@ namespace Vanilla
             }
 
             Executable ex;
-            Expression expr = this.ExprParser.ParseExpression();
+            Expression expr = this.ExprParser.ParseExpression(owner);
             tokens.EnsureNotEof();
             next = tokens.PeekValue();
             if (ASSIGN_OPS.Contains(next))
             {
                 Token assignToken = tokens.Pop();
-                Expression targetValue = this.ExprParser.ParseExpression();
+                Expression targetValue = this.ExprParser.ParseExpression(owner);
                 ex = new Assignment(expr, assignToken, targetValue, owner);
             }
             else
@@ -121,7 +121,7 @@ namespace Vanilla
                     if (loopVarDecl == null) throw new ParserException(forToken, "for loops over collections require a variable declaration");
                     if (!loopVarDecl.IsConst) throw new ParserException(loopVarDecl, "for loop iterating variables must be constants");
                     tokens.PopExpected("in");
-                    Expression collection = this.ExprParser.ParseExpression();
+                    Expression collection = this.ExprParser.ParseExpression(owner);
                     tokens.PopExpected(")");
                     code = this.ExecParser.ParseCodeBlock(owner, false);
                     return new ForEachLoop(forToken, owner, loopVarDecl, collection, code);
@@ -130,10 +130,10 @@ namespace Vanilla
                     if (loopVarDecl == null) throw new ParserException(forToken, "for loops over ranges require a variable declaration");
                     if (!loopVarDecl.IsConst) throw new ParserException(loopVarDecl, "for loop iterating variables must be constants");
                     tokens.PopExpected("from");
-                    Expression start = this.ExprParser.ParseExpression();
+                    Expression start = this.ExprParser.ParseExpression(owner);
                     if (!tokens.IsNext("thru") && !tokens.IsNext("till")) tokens.PopExpected("till"); // throws
                     Token endQualifier = tokens.Pop();
-                    Expression end = this.ExprParser.ParseExpression();
+                    Expression end = this.ExprParser.ParseExpression(owner);
                     tokens.PopExpected(")");
                     code = this.ExecParser.ParseCodeBlock(owner, false);
                     return new ForRangeLoop(forToken, owner, loopVarDecl, start, end, endQualifier.Value == "thru", code);
@@ -143,7 +143,7 @@ namespace Vanilla
                     Expression condition = null;
                     if (!tokens.PopIfPresent(";"))
                     {
-                        condition = this.ExprParser.ParseExpression();
+                        condition = this.ExprParser.ParseExpression(owner);
                         tokens.PopExpected(";");
                     }
                     List<Executable> step = new List<Executable>();
@@ -195,7 +195,7 @@ namespace Vanilla
         {
             Token ifToken = tokens.PopExpected("if");
             tokens.PopExpected("(");
-            Expression condition = this.ExprParser.ParseExpression();
+            Expression condition = this.ExprParser.ParseExpression(owner);
             tokens.PopExpected(")");
             Executable[] trueCode = this.ExecParser.ParseCodeBlock(owner, false);
             Executable[] falseCode = EMPTY_CODE_BLOCK;
@@ -211,7 +211,7 @@ namespace Vanilla
         {
             Token switchToken = tokens.PopExpected("switch");
             tokens.PopExpected("(");
-            Expression condition = this.ExprParser.ParseExpression();
+            Expression condition = this.ExprParser.ParseExpression(owner);
             tokens.PopExpected(")");
             tokens.PopExpected("{");
             List<SwitchChunk> chunks = new List<SwitchChunk>();
@@ -229,7 +229,7 @@ namespace Vanilla
                     if (isCaseNext)
                     {
                         caseTokens.Add(tokens.PopExpected("case"));
-                        activeChunkCases.Add(this.ExprParser.ParseExpression());
+                        activeChunkCases.Add(this.ExprParser.ParseExpression(owner));
                         tokens.PopExpected(":");
                     }
                     else if (isDefaultNext)
@@ -272,7 +272,7 @@ namespace Vanilla
             {
                 return new ReturnStatement(returnToken, null, owner);
             }
-            Expression value = this.ExprParser.ParseExpression();
+            Expression value = this.ExprParser.ParseExpression(owner);
             tokens.PopExpected(";");
 
             return new ReturnStatement(returnToken, value, owner);
@@ -304,7 +304,7 @@ namespace Vanilla
             if (tokens.IsNext("="))
             {
                 assignmentOp = tokens.PopExpected("=");
-                initialValue = this.ExprParser.ParseExpression();
+                initialValue = this.ExprParser.ParseExpression(owner);
             }
             if (popSemicolon)
             {

@@ -2,9 +2,9 @@
 {
     internal class TopLevelEntity : Entity
     {
-        public TopLevelEntity(Token firstToken) : base(firstToken)
-        {
+        public ClassDefinition WrapperClass { get; set; }
 
-        }
+        public TopLevelEntity(Token firstToken) : base(firstToken)
+        { }
     }
 }

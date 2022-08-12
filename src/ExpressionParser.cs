@@ -48,8 +48,10 @@ namespace Vanilla
             this.tokens = tokens;
         }
 
-        public Expression ParseExpression()
+        private TopLevelEntity activeOwner = null;
+        public Expression ParseExpression(TopLevelEntity owner)
         {
+            this.activeOwner = owner;
             return this.ParseTernary();
         }
 
@@ -118,7 +120,7 @@ namespace Vanilla
             if (tokens.IsNext("("))
             {
                 tokens.Pop();
-                root = this.ParseExpression();
+                root = this.ParseExpression(this.activeOwner);
                 tokens.PopExpected(")");
             } else
             {
@@ -138,7 +140,7 @@ namespace Vanilla
                         break;
                     case "[":
                         Token openBracket = tokens.Pop();
-                        Expression index = this.ParseExpression();
+                        Expression index = this.ParseExpression(this.activeOwner);
                         Token closeBracket = tokens.PopExpected("]");
                         root = new BracketIndex(root, openBracket, index);
                         break;
@@ -148,7 +150,7 @@ namespace Vanilla
                         while (!tokens.PopIfPresent(")"))
                         {
                             if (argList.Count > 0) tokens.PopExpected(",");
-                            argList.Add(this.ParseExpression());
+                            argList.Add(this.ParseExpression(this.activeOwner));
                         }
                         root = new FunctionInvocation(root, openParen, argList);
                         break;
@@ -206,7 +208,7 @@ namespace Vanilla
                 case "true": return new BooleanConstant(tokens.Pop(), true);
                 case "false": return new BooleanConstant(tokens.Pop(), false);
                 case "null": return new NullConstant(tokens.Pop());
-                case "this": return new ThisConstant(tokens.Pop());
+                case "this": return new ThisConstant(tokens.Pop(), this.activeOwner);
                 case "new": return this.ParseConstructorInvocation();
             }
 
@@ -324,7 +326,7 @@ namespace Vanilla
             while (!tokens.PopIfPresent(")"))
             {
                 if (args.Count > 0) tokens.PopExpected(",");
-                args.Add(this.ParseExpression());
+                args.Add(this.ParseExpression(this.activeOwner));
             }
             return new ConstructorInvocation(newToken, classNameToken, args);
         }
