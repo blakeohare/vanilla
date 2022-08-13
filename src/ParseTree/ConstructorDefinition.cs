@@ -18,6 +18,7 @@ namespace Vanilla.ParseTree
             for (int i = 0; i < argc; i++)
             {
                 VariableDeclaration argDec = new VariableDeclaration(this, argDeclarations[i], argTypes[i], argNames[i], null, null);
+                args.Add(argDec);
             }
             this.Args = args.ToArray();
             this.BaseToken = baseToken;

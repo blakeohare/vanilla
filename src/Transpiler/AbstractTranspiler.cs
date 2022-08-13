@@ -114,6 +114,7 @@ namespace Vanilla.Transpiler
         protected abstract void SerializeForRangeLoop(ForRangeLoop frl);
         protected abstract void SerializeFunction(FunctionDefinition fd);
         protected abstract void SerializeFunctionSignature(FunctionDefinition fd);
+        protected abstract void SerializeGetFieldValue(DotField df, bool useWrap);
         protected abstract void SerializeIfStatement(IfStatement ifst);
         protected abstract void SerializeIntegerConstant(IntegerConstant ic, bool useWrap);
         protected abstract void SerializeLocalFunctionInvocation(LocalFunctionInvocation lfi, bool useWrap);
@@ -122,6 +123,7 @@ namespace Vanilla.Transpiler
         protected abstract void SerializePairComparision(PairComparison pc, bool useWrap);
         protected abstract void SerializeReturnStatement(ReturnStatement rs);
         protected abstract void SerializeStringConstant(StringConstant sc, bool useWrap);
+        protected abstract void SerializeThisConstant(ThisConstant thiz, bool useWrap);
         protected abstract void SerializeVariable(Variable vd, bool useWrap);
         protected abstract void SerializeVariableDeclaration(VariableDeclaration vd, bool omitSemicolon);
 
@@ -178,6 +180,7 @@ namespace Vanilla.Transpiler
             {
                 case "ArithmeticPairOp": this.SerializeArithmeticPairOp((ArithmeticPairOp)expr, useWrap); break;
                 case "BooleanConstant": this.SerializeBooleanConstant((BooleanConstant)expr, useWrap); break;
+                case "DotField": this.SerializeGetFieldValue((DotField)expr, useWrap); break;
                 case "FunctionInvocation": this.SerializeFunctionInvocation((FunctionInvocation)expr, useWrap); break;
                 case "IntegerConstant": this.SerializeIntegerConstant((IntegerConstant)expr, useWrap); break;
                 case "LocalFunctionInvocation": this.SerializeLocalFunctionInvocation((LocalFunctionInvocation)expr, useWrap); break;
@@ -185,6 +188,7 @@ namespace Vanilla.Transpiler
                 case "PairComparison": this.SerializePairComparision((PairComparison)expr, useWrap); break;
                 case "StringConstant": this.SerializeStringConstant((StringConstant)expr, useWrap); break;
                 case "SystemFunctionInvocation": this.SerializeSystemFunctionInvocation((SystemFunctionInvocation)expr, useWrap); break;
+                case "ThisConstant": this.SerializeThisConstant((ThisConstant)expr, useWrap); break;
                 case "Variable": this.SerializeVariable((Variable)expr, useWrap); break;
 
                 case "OpChain": throw new Exception(); // OpChains should be resolved at this point into more specific types

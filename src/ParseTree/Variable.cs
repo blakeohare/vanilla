@@ -26,7 +26,8 @@
             {
                 return new FunctionReference(this.NameToken, fd);
             }
-            throw new System.NotImplementedException();
+
+            throw new ParserException(this, "The variable '" + this.Name + "' is not declared.");
         }
 
         public override Expression ResolveTypes(Resolver resolver)

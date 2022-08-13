@@ -90,6 +90,7 @@ namespace Vanilla.ParseTree
             switch (id)
             {
                 case "list.add": return Type.GetFunctionType(Type.VOID, new Type[] { itemType });
+                case "list.length": return Type.INT;
                 case "list.toArray": return Type.GetFunctionType(Type.GetArrayType(itemType), new Type[0]);
 
                 default:

@@ -177,6 +177,11 @@ namespace Vanilla.Transpiler
             Append(NL);
         }
 
+        protected override void SerializeGetFieldValue(DotField df, bool useWrap)
+        {
+            throw new System.NotImplementedException();
+        }
+
         protected override void SerializeAssignmentToField(DotField df, Assignment asgn, bool omitSemicolon, bool floatCast)
         {
             string op = asgn.Op.Value;
@@ -338,6 +343,11 @@ namespace Vanilla.Transpiler
             Append(stringTableId[sc.Value] + "");
             Append("]");
             ApplyUnwrapSuffix(sc, useWrap);
+        }
+
+        protected override void SerializeThisConstant(ThisConstant thiz, bool useWrap)
+        {
+            throw new System.NotImplementedException();
         }
 
         protected override void SerializeBooleanConstant(BooleanConstant bc, bool useWrap)

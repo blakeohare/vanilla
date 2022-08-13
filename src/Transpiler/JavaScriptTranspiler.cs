@@ -419,6 +419,13 @@ namespace Vanilla.Transpiler
             throw new System.NotImplementedException();
         }
 
+        protected override void SerializeGetFieldValue(DotField df, bool useWrap)
+        {
+            SerializeExpression(df.Root, false);
+            Append(".values.");
+            Append(df.FieldName);
+        }
+
         protected override void SerializeIfStatement(IfStatement ifst)
         {
             ApplyExecPrefix();
@@ -512,6 +519,15 @@ namespace Vanilla.Transpiler
             else
             {
                 Append(codeValue);
+            }
+        }
+
+        protected override void SerializeThisConstant(ThisConstant thiz, bool useWrap)
+        {
+            Append("_this");
+            if (!useWrap)
+            {
+                Append(".value");
             }
         }
 
