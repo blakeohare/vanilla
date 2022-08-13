@@ -47,6 +47,7 @@ namespace Vanilla.Transpiler
                 "vutilGetCommonString",
                 "vutilGetInt",
                 "vutilMapSet",
+                "vutilNewInstance",
                 "vutilNewMap",
                 "vutilSafeMod",
                 "vutilUnwrapNative",
@@ -61,6 +62,33 @@ namespace Vanilla.Transpiler
             }));
 
             outputFilePieces.Add(outputFile);
+
+            List<string> methodBuffer = new List<string>();
+            foreach (ClassDefinition cd in this.GetClassDefinitions())
+            {
+                methodBuffer.Add("vctx.classMetadata." + cd.Name + " = { methods: ");
+                FunctionDefinition[] methods = cd.Members.OfType<FunctionDefinition>().ToArray();
+                if (methods.Length == 0)
+                {
+                    methodBuffer.Add("{ }");
+                }
+                else
+                {
+                    methodBuffer.Add("{ ");
+                    for (int i = 0; i < methods.Length; i++)
+                    {
+                        if (i > 0) methodBuffer.Add(", ");
+                        methodBuffer.Add("f_" + methods[i].Name);
+                        methodBuffer.Add(": ");
+                        methodBuffer.Add("mt_" + cd.Name + "_");
+                        methodBuffer.Add(methods[i].Name);
+                    }
+                    methodBuffer.Add(" }");
+                }
+                methodBuffer.Add(" };");
+                methodBuffer.Add(this.NL);
+            }
+            outputFilePieces.Add(string.Join("", methodBuffer));
 
             outputFilePieces.Add(string.Join('\n', new string[] {
                 "return { ",
@@ -234,7 +262,32 @@ namespace Vanilla.Transpiler
             Append(this.NL);
             this.TabLevel++;
 
+            foreach (Field memberField in cd.Members.OfType<Field>())
+            {
+                Append(this.CurrentTab);
+                Append("_this.value.f_");
+                Append(memberField.Name);
+                Append(" = ");
+                if (memberField.StartingValue != null)
+                {
+                    SerializeExpression(memberField.StartingValue, true);
+                }
+                else
+                {
+                    Type type = memberField.Type;
+                    if (type.IsInteger) Append("vctx.constZero");
+                    else if (type.IsFloat) Append("vctx.constZeroF");
+                    else if (type.IsBoolean) Append("vctx.constFalse");
+                    else Append("vctx.constNull");
+                }
+                Append(';');
+                Append(NL);
+            }
+
             SerializeExecutables(ctor.Body);
+            Append(this.CurrentTab);
+            Append("return _this;");
+            Append(this.NL);
             this.TabLevel--;
             Append(this.CurrentTab);
             Append("};");
@@ -309,8 +362,7 @@ namespace Vanilla.Transpiler
             Append("(");
             Append("vutilNewInstance('");
             Append(cd.Name);
-            Append(", " + cd.FlattenedMemberCount);
-            Append(')');
+            Append("')");
 
             for (int i = 0; i < ctorInvoke.Args.Length; i++)
             {
@@ -393,11 +445,27 @@ namespace Vanilla.Transpiler
 
         protected override void SerializeFunction(FunctionDefinition fd)
         {
+            ClassDefinition classDef = fd.WrapperClass;
             ApplyExecPrefix();
             Append("const ");
+            if (fd.WrapperClass != null)
+            {
+                Append("mt_");
+                Append(classDef.Name);
+                Append('_');
+            }
             Append(fd.Name);
 
             Append(" = (");
+
+            if (classDef != null)
+            {
+                Append("_this");
+                if (fd.Args.Length > 0)
+                {
+                    Append(", ");
+                }
+            }
             for (int i = 0; i < fd.Args.Length; i++)
             {
                 if (i > 0) Append(", ");
@@ -422,8 +490,9 @@ namespace Vanilla.Transpiler
         protected override void SerializeGetFieldValue(DotField df, bool useWrap)
         {
             SerializeExpression(df.Root, false);
-            Append(".values.");
+            Append(".f_");
             Append(df.FieldName);
+            if (!useWrap) Append(".value");
         }
 
         protected override void SerializeIfStatement(IfStatement ifst)
@@ -454,14 +523,37 @@ namespace Vanilla.Transpiler
 
         protected override void SerializeIntegerConstant(IntegerConstant ic, bool useWrap)
         {
-            if (useWrap)
+            int value = ic.Value;
+
+            if (value < 1000 && value > -1000)
             {
-                Append("vutilGetInt(");
-                Append(ic.Value + ")");
+                if (useWrap)
+                {
+                    if (value == 0) Append("vctx.constZero");
+                    else if (value == 0) Append("vctx.constOne");
+                    else
+                    {
+                        if (value < 0) Append("vctx.numNeg[");
+                        else Append("vctx.numPos[");
+                        Append(value + "]");
+                    }
+                }
+                else
+                {
+                    Append("" + value);
+                }
             }
             else
             {
-                Append(ic.Value + "");
+                if (useWrap)
+                {
+                    Append("vutilGetInt(");
+                    Append(value + ")");
+                }
+                else
+                {
+                    Append(value + "");
+                }
             }
         }
 
@@ -484,6 +576,11 @@ namespace Vanilla.Transpiler
         protected override void SerializeMapAccess(MapAccess ma, bool useWrap)
         {
             throw new System.NotImplementedException();
+        }
+
+        protected override void SerializeNullConstant(bool useWrap)
+        {
+            Append(useWrap ? "vctx.constNull" : "null");
         }
 
         protected override void SerializePairComparision(PairComparison pc, bool useWrap)
@@ -511,10 +608,17 @@ namespace Vanilla.Transpiler
             string codeValue = "'" + sc.Value.Replace("\\", "\\\\").Replace("'", "\\'") + "'";
             if (useWrap)
             {
-                // TODO: build a string table, like in the C version
-                Append("vutilGetCommonString(");
-                Append(codeValue);
-                Append(')');
+                if (sc.Value.Length == 0)
+                {
+                    Append("vctx.emptyString");
+                }
+                else
+                {
+                    // TODO: build a string table, like in the C version
+                    Append("vutilGetCommonString(");
+                    Append(codeValue);
+                    Append(')');
+                }
             }
             else
             {
@@ -608,6 +712,14 @@ namespace Vanilla.Transpiler
             Append("Math.sqrt(");
             SerializeExpression(expr, false);
             Append(')');
+            if (useWrap) Append(')');
+        }
+
+        protected override void SerializeSysPropListLength(Expression expr, bool useWrap)
+        {
+            if (useWrap) Append("vutilGetInt(");
+            SerializeExpression(expr, false);
+            Append(".length");
             if (useWrap) Append(')');
         }
 

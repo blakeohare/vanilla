@@ -332,6 +332,11 @@ namespace Vanilla.Transpiler
             ApplyUnwrapSuffix(ma, useWrap);
         }
 
+        protected override void SerializeNullConstant(bool useWrap)
+        {
+            throw new System.NotImplementedException();
+        }
+
         protected override void SerializeStringConstant(StringConstant sc, bool useWrap)
         {
             ApplyUnwrapPrefix(sc, useWrap);
@@ -653,6 +658,11 @@ namespace Vanilla.Transpiler
             SerializeExpression(expr, false);
             Append(")");
             if (useWrap) Append(')');
+        }
+
+        protected override void SerializeSysPropListLength(Expression expr, bool useWrap)
+        {
+            throw new System.NotImplementedException();
         }
     }
 }

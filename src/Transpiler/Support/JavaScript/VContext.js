@@ -15,14 +15,20 @@
 	let emptyString = { type: 'S', value: "" };
 	commonStrings[""] = emptyString;
 
+	let constZeroF = { type: 'F', value: 0.0 };
+	let constNull = { type: 'N' };
+
 	return {
 		constTrue,
 		constFalse,
+		constNull,
 		numPos,
 		numNeg,
 		constZero,
 		constOne,
+		constZeroF,
 		commonStrings,
 		emptyString,
+		classMetadata: {},
 	};
 };

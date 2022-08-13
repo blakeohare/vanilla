@@ -26,6 +26,7 @@ namespace Vanilla
         public bool IsInteger { get { return this.RootType == "int"; } }
         public bool IsFloat { get { return this.RootType == "float"; } }
         public bool IsString { get { return this.RootType == "string"; } }
+        public bool IsBoolean { get { return this.RootType == "bool"; } }
 
         public Type ItemType { get { return this.Generics.Length > 0 ? this.Generics[0] : null; } }
         public Type KeyType { get { return this.ItemType; } }

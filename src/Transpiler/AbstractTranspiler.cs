@@ -38,6 +38,11 @@ namespace Vanilla.Transpiler
             return this.bundle.StringDefinitions.ToArray();
         }
 
+        public ClassDefinition[] GetClassDefinitions()
+        {
+            return this.bundle.ClassDefinitions.ToArray();
+        }
+
         public FunctionDefinition[] GetPublicFunctions()
         {
             return this.bundle.FunctionDefinitions
@@ -120,6 +125,7 @@ namespace Vanilla.Transpiler
         protected abstract void SerializeLocalFunctionInvocation(LocalFunctionInvocation lfi, bool useWrap);
         protected abstract void SerializeMapAccess(MapAccess ma, bool useWrap);
         protected abstract void SerializeMethodInvocation(Expression root, string methodName, Expression[] args, bool useWrap);
+        protected abstract void SerializeNullConstant(bool useWrap);
         protected abstract void SerializePairComparision(PairComparison pc, bool useWrap);
         protected abstract void SerializeReturnStatement(ReturnStatement rs);
         protected abstract void SerializeStringConstant(StringConstant sc, bool useWrap);
@@ -134,6 +140,7 @@ namespace Vanilla.Transpiler
         protected abstract void SerializeSysFuncListToArray(Type itemType, Expression listExpr, bool useWrap);
         protected abstract void SerializeSysFuncMapOf(Type keyType, Type valueType, Expression[] args, bool useWrap);
         protected abstract void SerializeSysFuncSqrt(Expression expr, bool useWrap);
+        protected abstract void SerializeSysPropListLength(Expression expr, bool useWrap);
 
         internal void SerializeExecutable(Executable ex, bool omitSemicolon)
         {
@@ -180,11 +187,11 @@ namespace Vanilla.Transpiler
             {
                 case "ArithmeticPairOp": this.SerializeArithmeticPairOp((ArithmeticPairOp)expr, useWrap); break;
                 case "BooleanConstant": this.SerializeBooleanConstant((BooleanConstant)expr, useWrap); break;
-                case "DotField": this.SerializeGetFieldValue((DotField)expr, useWrap); break;
                 case "FunctionInvocation": this.SerializeFunctionInvocation((FunctionInvocation)expr, useWrap); break;
                 case "IntegerConstant": this.SerializeIntegerConstant((IntegerConstant)expr, useWrap); break;
                 case "LocalFunctionInvocation": this.SerializeLocalFunctionInvocation((LocalFunctionInvocation)expr, useWrap); break;
                 case "MapAccess": this.SerializeMapAccess((MapAccess)expr, useWrap); break;
+                case "NullConstant": this.SerializeNullConstant(useWrap); break;
                 case "PairComparison": this.SerializePairComparision((PairComparison)expr, useWrap); break;
                 case "StringConstant": this.SerializeStringConstant((StringConstant)expr, useWrap); break;
                 case "SystemFunctionInvocation": this.SerializeSystemFunctionInvocation((SystemFunctionInvocation)expr, useWrap); break;
@@ -192,6 +199,27 @@ namespace Vanilla.Transpiler
                 case "Variable": this.SerializeVariable((Variable)expr, useWrap); break;
 
                 case "OpChain": throw new Exception(); // OpChains should be resolved at this point into more specific types
+
+                case "DotField":
+                    DotField dotField = (DotField)expr;
+                    Type rootType = dotField.Root.ResolvedType;
+                    if (rootType.IsClass)
+                    {
+                        this.SerializeGetFieldValue(dotField, useWrap);
+                    }
+                    else
+                    {
+                        string signature = (rootType.IsArray ? "list" : rootType.RootType) + "." + dotField.FieldName;
+                        switch (signature)
+                        {
+                            case "list.length":
+                                this.SerializeSysPropListLength(dotField.Root, useWrap);
+                                break;
+                            default:
+                                throw new NotImplementedException();
+                        }
+                    }
+                    break;
 
                 case "ConstructorInvocation":
                     if (!useWrap) throw new Exception(); // should not happen

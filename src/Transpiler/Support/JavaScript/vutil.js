@@ -25,6 +25,10 @@
 			wm.values[i] = wv;
 		}
 	};
+	let vutilNewInstance = (name) => {
+		let obj = { '@class': name, ...vctx.classMetadata[name].methods };
+		return { type: 'O', value: obj };
+	};
 	let vutilNewMap = (isIntKeys) => {
 		return { type: 'M', keys: [], values: [], nativeKeyToIndex: {}, isIntKeys };
 	};
@@ -65,6 +69,7 @@
 		switch (typeof value) {
 			case 'number':
 				if (value % 1 === 0) return vutilGetInt(value);
+				if (value === 0) return vctx.constZeroF;
 				return { type: 'F', value };
 
 			case 'string':
@@ -90,12 +95,15 @@
 	// TODO: support cyclic data structures
 	let vutilUnwrapNative = (value) => { // TODO: should be vutilUnwrap*To*Native
 		switch (value.type) {
-			case 'B':
 			case 'N':
+				return null;
+			case 'B':
 			case 'I':
 			case 'F':
 			case 'S':
 				return value.value;
+			case 'O':
+				throw new Error(); // TODO: unwrap objects
 			case 'A':
 				return value.value.map(vutilUnwrapNative);
 			case 'M':
@@ -116,6 +124,7 @@
 		vutilGetCommonString,
 		vutilGetInt,
 		vutilMapSet,
+		vutilNewInstance,
 		vutilNewMap,
 		vutilSafeMod,
 		vutilUnwrapNative,
