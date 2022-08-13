@@ -21,7 +21,21 @@
         {
             if (this.Value != null)
             {
-                this.Value = this.Value.ResolveTypes(resolver);
+                Type nullHint;
+                if (this.Owner is FunctionDefinition)
+                {
+                    nullHint = ((FunctionDefinition)this.Owner).ReturnType;
+                }
+                else if (this.Owner is ConstructorDefinition)
+                {
+                    throw new ParserException(this, "Cannot return a value from the constructor");
+                }
+                else
+                {
+                    throw new ParserException(this, "The return statement cannot be used here.");
+                }
+
+                this.Value = this.Value.ResolveTypes(resolver, nullHint);
             }
         }
     }

@@ -10,5 +10,13 @@
         {
             return token.FileName + ", Line " + token.Line + ", Col " + token.Col + ": ";
         }
+
+        internal static void EnsureArgCount(ParseTree.Entity entity, int expectedCount, int actualCount)
+        {
+            if (expectedCount != actualCount)
+            {
+                throw new ParserException(entity, "Incorrect number of arguments. Expected " + expectedCount + " but found " + actualCount + " instead.");
+            }
+        }
     }
 }

@@ -17,7 +17,7 @@ namespace Vanilla.ParseTree
             this.ResolvedType = Type.BOOL;
         }
 
-        public override Expression ResolveTypes(Resolver resolver)
+        public override Expression ResolveTypes(Resolver resolver, Type nullHint)
         {
             throw new NotImplementedException(); // Created in the type resolver phase
         }

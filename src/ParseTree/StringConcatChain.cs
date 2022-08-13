@@ -19,7 +19,7 @@ namespace Vanilla.ParseTree
             throw new System.NotImplementedException();
         }
 
-        public override Expression ResolveTypes(Resolver resolver)
+        public override Expression ResolveTypes(Resolver resolver, Type nullHint)
         {
             // Generated during the type resolver phase
             throw new System.NotImplementedException();

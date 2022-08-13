@@ -32,36 +32,20 @@ namespace Vanilla.ParseTree
             return this;
         }
 
-        private void ResolveArgTypes(Resolver resolver)
+        private void ResolveArgTypes(Resolver resolver, Type[] expectedArgTypes)
         {
+            ParserException.EnsureArgCount(this, expectedArgTypes.Length, this.ArgList.Length);
+
             for (int i = 0; i < this.ArgList.Length; i++)
             {
-                this.ArgList[i] = this.ArgList[i].ResolveTypes(resolver);
+                this.ArgList[i] = this.ArgList[i].ResolveTypes(resolver, expectedArgTypes[i]);
             }
         }
 
-        private SystemFunction GetRootAsSystemFunction(string typeSignature, Expression fieldFreeRoot, Token fieldToken)
+        public override Expression ResolveTypes(Resolver resolver, Type nullHint)
         {
-            Type rootType = fieldFreeRoot.ResolvedType;
-            Token firstToken = fieldFreeRoot.FirstToken;
-            Type g1 = rootType.Generics.Length > 0 ? rootType.Generics[0] : null;
-
-            switch (typeSignature)
-            {
-                case "list.add":
-                    return new SystemFunction(firstToken, SystemFunctionType.LIST_ADD, Type.GetListType(rootType.Generics[0]), fieldToken)
-                    {
-                        ResolvedType = Type.GetFunctionType(Type.VOID, new Type[] { g1 }),
-                    };
-                default:
-                    throw new System.NotImplementedException();
-            }
-        }
-
-        public override Expression ResolveTypes(Resolver resolver)
-        {
-            this.Root.ResolveTypes(resolver);
-            this.ResolveArgTypes(resolver);
+            this.Root.ResolveTypes(resolver, nullHint);
+            this.ResolveArgTypes(resolver, null);
 
             if (this.Root is DotField)
             {
@@ -168,7 +152,7 @@ namespace Vanilla.ParseTree
             }
             else if (this.Root is FunctionReference)
             {
-                this.Root = this.Root.ResolveTypes(resolver);
+                this.Root = this.Root.ResolveTypes(resolver, null);
                 return new LocalFunctionInvocation((FunctionReference)this.Root, this.ArgList);
             }
             else
@@ -210,7 +194,7 @@ namespace Vanilla.ParseTree
                 case SystemFunctionType.FLOOR: return Type.GetFunctionType(Type.INT, new Type[] { Type.FLOAT });
                 default: break;
             }
-            Type rootType = sysFunc.TypeForMethods;
+            Type rootType = sysFunc.FunctionReturnType;
             Type[] generics = rootType.Generics;
             Type keyType = generics.Length == 2 ? generics[0] : null;
             Type valueType = generics.Length == 2 ? generics[1] : null;

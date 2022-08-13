@@ -15,9 +15,9 @@
             return this;
         }
 
-        public override Expression ResolveTypes(Resolver resolver)
+        public override Expression ResolveTypes(Resolver resolver, Type nullHint)
         {
-            this.Root = this.Root.ResolveTypes(resolver);
+            this.Root = this.Root.ResolveTypes(resolver, null);
             if (this.Root.ResolvedType.RootType != "bool") throw new ParserException(this, "! cannot be applied to this type.");
             return this;
         }

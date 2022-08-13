@@ -27,7 +27,7 @@ namespace Vanilla.ParseTree
             this.usesFakeFirstArg = true;
         }
 
-        public override Expression ResolveTypes(Resolver resolver)
+        public override Expression ResolveTypes(Resolver resolver, Type nullHint)
         {
             // Generated as a result of the type resolver
             throw new NotImplementedException();

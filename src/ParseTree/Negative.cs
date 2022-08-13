@@ -15,7 +15,7 @@
             return this;
         }
 
-        public override Expression ResolveTypes(Resolver resolver)
+        public override Expression ResolveTypes(Resolver resolver, Type nullHint)
         {
             throw new System.NotImplementedException();
         }

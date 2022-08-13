@@ -9,9 +9,11 @@
             return this;
         }
 
-        public override Expression ResolveTypes(Resolver resolver)
+        public override Expression ResolveTypes(Resolver resolver, Type nullHint)
         {
-            throw new System.NotImplementedException();
+            if (nullHint == null || nullHint.IsBoolean || nullHint.IsNumeric) throw new ParserException(this, "Null cannot be used here.");
+            this.ResolvedType = nullHint;
+            return this;
         }
     }
 }

@@ -51,9 +51,14 @@ namespace Vanilla.ParseTree
 
         public void ResolveTypes(Resolver resolver)
         {
+#pragma warning disable CS0162 // Unreachable code detected
             for (int i = 0; i < this.BaseArgs.Length; i++)
+#pragma warning restore CS0162 // Unreachable code detected
             {
-                this.BaseArgs[i] = this.BaseArgs[i].ResolveTypes(resolver);
+                // Type expectedType = ...
+                // this.BaseArgs[i] = this.BaseArgs[i].ResolveTypes(resolver, expectedType);
+
+                throw new System.NotImplementedException();
             }
 
             foreach (Executable line in this.Body)

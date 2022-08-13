@@ -31,9 +31,9 @@ namespace Vanilla.ParseTree
             return new SystemFunction(this.Root.FirstToken, func, ((TypeRootedExpression)this.Root).Type, this.FieldToken);
         }
 
-        public override Expression ResolveTypes(Resolver resolver)
+        public override Expression ResolveTypes(Resolver resolver, Type nullHint)
         {
-            this.Root = this.Root.ResolveTypes(resolver);
+            this.Root = this.Root.ResolveTypes(resolver, null);
 
             if (this.Root is TypeRootedExpression)
             {

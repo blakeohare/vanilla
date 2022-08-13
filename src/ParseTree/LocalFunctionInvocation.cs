@@ -16,7 +16,7 @@ namespace Vanilla.ParseTree
             this.ResolvedType = this.FuncRef.ResolvedType.Generics[0]; // The function signature's return type is the overall type of the invocation.
         }
 
-        public override Expression ResolveTypes(Resolver resolver)
+        public override Expression ResolveTypes(Resolver resolver, Type nullHint)
         {
             throw new NotImplementedException();
         }

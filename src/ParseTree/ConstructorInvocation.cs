@@ -23,13 +23,21 @@ namespace Vanilla.ParseTree
             return this;
         }
 
-        public override Expression ResolveTypes(Resolver resolver)
+        public override Expression ResolveTypes(Resolver resolver, Type nullHint)
         {
+            this.ResolvedType = Type.GetInstanceType(this.ClassNameToken.Value);
+            ClassDefinition cd = this.ResolvedType.ResolvedClass;
+            ConstructorDefinition ctor = cd.Constructor;
+            if (ctor.Args.Length != this.Args.Length)
+            {
+                throw new ParserException(this, "The constructor for '" + cd.Name + "' takes in " + ctor.Args.Length + " argument(s) but found " + this.Args.Length + ".");
+            }
+
             for (int i = 0; i < this.Args.Length; i++)
             {
-                this.Args[i] = this.Args[i].ResolveTypes(resolver);
+                this.Args[i] = this.Args[i].ResolveTypes(resolver, ctor.Args[i].Type);
             }
-            this.ResolvedType = Type.GetInstanceType(this.ClassNameToken.Value);
+
             this.ResolvedType.Resolve(resolver);
             return this;
         }

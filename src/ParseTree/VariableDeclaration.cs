@@ -33,7 +33,7 @@
             this.Type.Resolve(resolver);
             if (this.InitialValue != null)
             {
-                this.InitialValue = this.InitialValue.ResolveTypes(resolver);
+                this.InitialValue = this.InitialValue.ResolveTypes(resolver, this.Type);
             }
         }
     }

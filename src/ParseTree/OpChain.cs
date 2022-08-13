@@ -23,11 +23,11 @@ namespace Vanilla.ParseTree
             return this;
         }
 
-        public override Expression ResolveTypes(Resolver resolver)
+        public override Expression ResolveTypes(Resolver resolver, Type nullHint)
         {
             for (int i = 0; i < this.Expressions.Length; i++)
             {
-                this.Expressions[i] = this.Expressions[i].ResolveTypes(resolver);
+                this.Expressions[i] = this.Expressions[i].ResolveTypes(resolver, null);
             }
 
             Type accType = this.Expressions[0].ResolvedType;

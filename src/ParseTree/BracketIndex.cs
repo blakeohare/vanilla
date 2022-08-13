@@ -20,10 +20,10 @@
             return this;
         }
 
-        public override Expression ResolveTypes(Resolver resolver)
+        public override Expression ResolveTypes(Resolver resolver, Type nullHint)
         {
-            this.Root = this.Root.ResolveTypes(resolver);
-            this.Index = this.Index.ResolveTypes(resolver);
+            this.Root = this.Root.ResolveTypes(resolver, null);
+            this.Index = this.Index.ResolveTypes(resolver, null);
             Type rootType = this.Root.ResolvedType;
             Type keyType = this.Index.ResolvedType;
             switch (this.Root.ResolvedType.RootType)

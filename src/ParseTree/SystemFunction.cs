@@ -20,14 +20,14 @@
         public Token NameToken { get; private set; }
         public string Name { get; private set; }
         public SystemFunctionType SystemId { get; private set; }
-        public Type TypeForMethods { get; private set; }
+        public Type FunctionReturnType { get; private set; }
 
         public SystemFunction(Token firstToken, SystemFunctionType typeMethod, Type baseType, Token nameToken) : base(firstToken)
         {
             this.NameToken = nameToken;
             this.Name = baseType.RootType + "." + nameToken.Value;
             this.SystemId = typeMethod;
-            this.TypeForMethods = baseType;
+            this.FunctionReturnType = baseType;
         }
 
         public SystemFunction(Token dollarToken, Token nameToken) : base(dollarToken)
@@ -52,7 +52,7 @@
             return this;
         }
 
-        public override Expression ResolveTypes(Resolver resolver)
+        public override Expression ResolveTypes(Resolver resolver, Type nullHint)
         {
             throw new ParserException(this.FirstToken, "Type methods and system functions must be invoked and cannot be passed as function pointers.");
         }

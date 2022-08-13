@@ -30,7 +30,7 @@
             throw new ParserException(this, "The variable '" + this.Name + "' is not declared.");
         }
 
-        public override Expression ResolveTypes(Resolver resolver)
+        public override Expression ResolveTypes(Resolver resolver, Type nullHint)
         {
             this.ResolvedType = this.Declaration.Type;
             return this;

@@ -15,7 +15,7 @@
             return this;
         }
 
-        public override Expression ResolveTypes(Resolver resolver)
+        public override Expression ResolveTypes(Resolver resolver, Type nullHint)
         {
             if (this.owner == null || // should not happen but who knows.
                 this.owner.WrapperClass == null)

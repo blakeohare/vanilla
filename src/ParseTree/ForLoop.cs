@@ -50,7 +50,7 @@ namespace Vanilla.ParseTree
 
             if (this.Condition != null)
             {
-                this.Condition = this.Condition.ResolveTypes(resolver);
+                this.Condition = this.Condition.ResolveTypes(resolver, null);
                 if (this.Condition.ResolvedType.RootType != "bool")
                 {
                     throw new ParserException(this.Condition.FirstToken, "For loop condition must resolve to a boolean.");

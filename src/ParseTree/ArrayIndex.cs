@@ -16,7 +16,7 @@ namespace Vanilla.ParseTree
             this.ResolvedType = this.Root.ResolvedType.Generics[0];
         }
 
-        public override Expression ResolveTypes(Resolver resolver)
+        public override Expression ResolveTypes(Resolver resolver, Type nullHint)
         {
             // Generated as a result of type resolver, so children are already resolved.
             throw new NotImplementedException();

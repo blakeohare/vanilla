@@ -21,8 +21,8 @@
 
         public override void ResolveTypes(Resolver resolver)
         {
-            this.Target = this.Target.ResolveTypes(resolver);
-            this.Value = this.Value.ResolveTypes(resolver);
+            this.Target = this.Target.ResolveTypes(resolver, null);
+            this.Value = this.Value.ResolveTypes(resolver, this.Target.ResolvedType);
         }
     }
 }
