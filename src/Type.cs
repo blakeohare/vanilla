@@ -27,6 +27,7 @@ namespace Vanilla
         public bool IsFloat { get { return this.RootType == "float"; } }
         public bool IsString { get { return this.RootType == "string"; } }
         public bool IsBoolean { get { return this.RootType == "bool"; } }
+        public bool IsVoid { get { return this.RootType == "void"; } }
 
         public Type ItemType { get { return this.Generics.Length > 0 ? this.Generics[0] : null; } }
         public Type KeyType { get { return this.ItemType; } }
@@ -83,6 +84,14 @@ namespace Vanilla
             return new Type() { FirstToken = null, RootType = className, IsClass = true };
         }
 
+        public static Type GetInstanceType(ClassDefinition cd)
+        {
+            Type t = GetInstanceType(cd.Name);
+            t.ResolvedClass = cd;
+            t.IsResolved = true;
+            return t;
+        }
+
         public void Resolve(Resolver resolver)
         {
             if (this.IsResolved) return;
@@ -97,6 +106,17 @@ namespace Vanilla
                 gen.Resolve(resolver);
             }
             this.IsResolved = true;
+        }
+
+        public bool TypeEqual(Type otherType)
+        {
+            if (this.RootType != otherType.RootType) return false;
+            if (this.Generics.Length != otherType.Generics.Length) return false;
+            for (int i = 0; i < this.Generics.Length; i++)
+            {
+                if (!this.Generics[i].TypeEqual(otherType.Generics[i])) return false;
+            }
+            return true;
         }
 
         public bool AssignableFrom(Type otherType)
@@ -117,6 +137,10 @@ namespace Vanilla
                 throw new System.NotImplementedException();
             }
             if (otherType.RootType != this.RootType) return false;
+            if ((this.RootType == "list" || this.RootType == "array") && this.RootType == otherType.RootType)
+            {
+                return this.ItemType.TypeEqual(otherType.ItemType);
+            }
             throw new System.NotImplementedException();
         }
     }

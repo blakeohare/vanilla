@@ -187,7 +187,7 @@ namespace Vanilla.Transpiler
             throw new System.NotImplementedException();
         }
 
-        protected override void SerializeAssignmentToField(DotField df, Assignment asgn, bool omitSemicolon, bool floatCast)
+        protected override void SerializeAssignmentToField(FieldReference df, Assignment asgn, bool omitSemicolon, bool floatCast)
         {
             string op = asgn.Op.Value;
             if (!omitSemicolon) ApplyExecPrefix();
@@ -279,22 +279,9 @@ namespace Vanilla.Transpiler
             }
         }
 
-        protected override void SerializeMethodInvocation(Expression root, string methodName, Expression[] args, bool useWrap)
+        protected override void SerializeMethodInvocation(MethodInvocation mi, bool useWrap)
         {
-            if (root is FunctionReference)
-            {
-                Append(((FunctionReference)root).FunctionDefinition.Name);
-                Append('(');
-                for (int i = 0; i < args.Length; i++)
-                {
-                    this.SerializeExpression(args[i], true);
-                }
-                Append(')');
-            }
-            else
-            {
-                throw new ParserException(root, "Not implemented yet");
-            }
+            throw new ParserException(mi, "Not implemented yet");
         }
 
         protected override void SerializeConstructor(ConstructorDefinition ctor)
@@ -398,6 +385,11 @@ namespace Vanilla.Transpiler
             ApplyExecSuffix();
         }
 
+        protected override void SerializeSysFuncListLength(Expression expr, bool useWrap)
+        {
+            throw new System.NotImplementedException();
+        }
+
         protected override void SerializeSysFuncListOf(Type itemType, Expression[] args, bool useWrap)
         {
             EnsureUsingWrap(useWrap);
@@ -494,6 +486,11 @@ namespace Vanilla.Transpiler
         protected override void SerializeIfStatement(IfStatement ifst)
         {
             this.SerializeIfStatement(ifst, false);
+        }
+
+        protected override void SerializeFieldReference(FieldReference fieldRef, bool useWrap)
+        {
+            throw new System.NotImplementedException();
         }
 
         protected override void SerializeForLoop(ForLoop floop)

@@ -26,80 +26,144 @@ namespace Vanilla.ParseTree
             return this;
         }
 
-        private SystemFunction CreateTypeMethod(SystemFunctionType func)
+        public override Expression ResolveTypes(Resolver resolver, Type nullHint)
         {
-            return new SystemFunction(this.Root.FirstToken, func, ((TypeRootedExpression)this.Root).Type, this.FieldToken);
+            Expression result = this.TryResolveTypesImpl(resolver, null);
+            if (result.ResolvedType == null)
+            {
+                throw new ParserException(this, "This expression must be invoked as a function.");
+            }
+            return result;
         }
 
-        public override Expression ResolveTypes(Resolver resolver, Type nullHint)
+        internal Expression ResolveTypesAsFunctionInvocationTarget(Resolver resolver)
+        {
+            return this.TryResolveTypesImpl(resolver, null);
+        }
+
+        /*
+            This should catch all systes function invocations.
+            
+            TYPE-ROOTED EXPRESSIONS: array<int>.castFrom(myList)
+                This get converted into a system function with a ResolvedType == null.
+                This is because it needs the arguments to know what to resolve the type to.
+                This is ONLY allowed to happen when called from the FunctionInvocation's ResolveTypes
+                method using a special if statement. If this returns a value that has 
+                a .ResolvedType == null when called by the DotField.ResolveTypes method then this 
+                will throw a ParserException. See ResolveTypesAsFunctionInvocationTarget.
+            
+            PRIMITIVE INSTANCE METHODS: myString.replace(a, b)
+                This will get converted into a SystemFunction as well, but will additionally
+                have the RootContext set to a non-null value.
+            
+            STANDALONE PRIMITIVE PROPERTIES: myArray.length
+                This will get converted into a SystemFunctionINVOCATION. In other words, the parser
+                after this point will treat it as if it were a array.length(). It will have a root
+                context value of the root value and its ResolvedType will not be null.
+        */
+
+        private Expression TryResolveTypesImpl(Resolver resolver, Type nullHint)
         {
             this.Root = this.Root.ResolveTypes(resolver, null);
 
+            Token firstToken = this.FirstToken;
+
             if (this.Root is TypeRootedExpression)
             {
-                Type rootType = ((TypeRootedExpression)this.Root).Type;
-                switch (rootType.RootType + "." + this.FieldName)
-                {
-                    case "array.of": return CreateTypeMethod(SystemFunctionType.ARRAY_OF);
-                    case "array.castFrom": return CreateTypeMethod(SystemFunctionType.ARRAY_CAST_FROM);
-                    case "list.of": return CreateTypeMethod(SystemFunctionType.LIST_OF);
-                    case "map.of": return CreateTypeMethod(SystemFunctionType.MAP_OF);
+                TypeRootedExpression tre = (TypeRootedExpression)this.Root;
 
-                    default:
-                        throw new ParserException(this.DotToken, "The type '" + rootType + "' does not have a field named '" + this.FieldName + "'.");
-                }
-            }
-            else
-            {
-                Type rootType = this.Root.ResolvedType;
-                if (rootType.IsClass)
+                SystemFunctionType sysFuncType = SystemFunctionType.UNKNOWN;
+                string signature = tre.Type.RootType + "." + this.FieldName;
+                switch (signature)
                 {
-                    TopLevelEntity member = rootType.ResolvedClass.GetMemberWithInheritance(this.FieldName);
-                    if (member == null)
-                    {
-                        throw new ParserException(this.FieldToken, "The class " + rootType.ResolvedClass.Name + " does not have a member named " + this.FieldName);
-                    }
-                    this.ResolvedMember = member;
-                    if (member is FunctionDefinition)
-                    {
-                        FunctionDefinition fd = member as FunctionDefinition;
-                        this.ResolvedType = Type.GetFunctionType(fd.ReturnType, fd.Args.Select(arg => arg.Type).ToArray());
-                    }
-                    else if (member is Field)
-                    {
-                        Field f = member as Field;
-                        this.ResolvedType = f.Type;
-                    }
-                    else
-                    {
-                        throw new System.NotImplementedException();
-                    }
+                    case "array.castFrom": sysFuncType = SystemFunctionType.ARRAY_CAST_FROM; break;
+                    case "array.of": sysFuncType = SystemFunctionType.ARRAY_OF; break;
+                    case "list.of": sysFuncType = SystemFunctionType.LIST_OF; break;
+                    case "map.of": sysFuncType = SystemFunctionType.MAP_OF; break;
                 }
-                else
-                {
-                    this.ResolvedType = this.GetPrimitiveFieldType(rootType, rootType.RootType + "." + this.FieldName);
-                }
-                this.ResolvedType.Resolve(resolver);
-            }
-            return this;
-        }
 
-        private static Type[] NO_ARGS = new Type[0];
-        private Type GetPrimitiveFieldType(Type rootType, string id)
-        {
-            Type itemType = rootType.Generics.Length == 1 ? rootType.Generics[0] : null;
-            switch (id)
-            {
-                case "array.length": return Type.INT;
-                case "list.add": return Type.GetFunctionType(Type.VOID, new Type[] { itemType });
-                case "list.length": return Type.INT;
-                case "list.toArray": return Type.GetFunctionType(Type.GetArrayType(itemType), NO_ARGS);
-                case "string.replace": return Type.GetFunctionType(Type.STRING, new Type[] { Type.STRING, Type.STRING });
-                case "string.trim": return Type.GetFunctionType(Type.STRING, NO_ARGS);
-                case "string.toCharacterArray": return Type.GetFunctionType(Type.GetArrayType(Type.STRING), NO_ARGS);
-                default:
-                    throw new ParserException(this.DotToken, "There is no field named " + id + " on type " + rootType.RootType + ".");
+                if (sysFuncType == SystemFunctionType.UNKNOWN)
+                {
+                    throw new ParserException(this.DotToken, "The type '" + tre.Type.RootType + "' does not have a field named '" + this.FieldName + "'.");
+                }
+                return new SystemFunction(firstToken, sysFuncType, tre.Type, this.FieldToken);
             }
+
+            Type rootType = this.Root.ResolvedType;
+            if (rootType.IsClass)
+            {
+                TopLevelEntity member = rootType.ResolvedClass.GetMemberWithInheritance(this.FieldName);
+                if (member == null) throw new ParserException(this.FieldToken, "The class " + rootType.ResolvedClass.Name + " does not have a member named " + this.FieldName);
+
+                this.ResolvedMember = member;
+                if (member is FunctionDefinition)
+                {
+                    FunctionDefinition funcDef = (FunctionDefinition)member;
+                    FunctionReference fr = new FunctionReference(
+                        this.FirstToken,
+                        funcDef,
+                        Type.GetFunctionType(funcDef.ReturnType, funcDef.Args.Select(arg => arg.Type).ToArray()));
+                    fr.InstanceContext = this.Root;
+                    return fr;
+                }
+
+                if (member is Field)
+                {
+                    return new FieldReference(this.FirstToken, (Field)member, this.Root);
+                }
+
+                throw new System.NotImplementedException();
+            }
+
+            SystemFunctionType sysFunc = SystemFunctionType.UNKNOWN;
+            Type funcReturnType = Type.VOID;
+            bool useDummyInvocation = false;
+            switch (rootType.RootType + "." + this.FieldName)
+            {
+                case "array.length":
+                    sysFunc = SystemFunctionType.ARRAY_LENGTH;
+                    funcReturnType = Type.INT;
+                    useDummyInvocation = true;
+                    break;
+                case "list.add":
+                    sysFunc = SystemFunctionType.LIST_ADD;
+                    funcReturnType = Type.VOID;
+                    break;
+                case "list.length":
+                    sysFunc = SystemFunctionType.LIST_LENGTH;
+                    funcReturnType = Type.INT;
+                    useDummyInvocation = true;
+                    break;
+                case "list.toArray":
+                    sysFunc = SystemFunctionType.LIST_TO_ARRAY;
+                    funcReturnType = Type.GetArrayType(rootType.ItemType);
+                    break;
+                case "string.replace":
+                    sysFunc = SystemFunctionType.STRING_REPLACE;
+                    funcReturnType = Type.STRING;
+                    break;
+                case "string.toCharacterArray":
+                    sysFunc = SystemFunctionType.STRING_TO_CHARACTER_ARRAY;
+                    funcReturnType = Type.GetArrayType(Type.STRING);
+                    break;
+                case "string.trim":
+                    sysFunc = SystemFunctionType.STRING_TRIM;
+                    funcReturnType = Type.STRING;
+                    break;
+            }
+
+            if (sysFunc == SystemFunctionType.UNKNOWN)
+            {
+                throw new ParserException(this.DotToken, "The type '" + rootType.RootType + "' does not have a field named + '." + this.FieldName + "'.");
+            }
+
+            SystemFunction sysFuncInstance = new SystemFunction(this.FirstToken, sysFunc, funcReturnType, this.FieldToken);
+            sysFuncInstance.RootContext = this.Root;
+            if (useDummyInvocation)
+            {
+                return new SystemFunctionInvocation(this.FirstToken, sysFunc, this.Root, new Expression[0]) { ResolvedType = funcReturnType };
+            }
+            return sysFuncInstance;
         }
     }
 }

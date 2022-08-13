@@ -2,10 +2,14 @@
 {
     public enum SystemFunctionType
     {
+        UNKNOWN,
+
         ARRAY_CAST_FROM,
+        ARRAY_LENGTH,
         ARRAY_OF,
         FLOOR,
         LIST_ADD,
+        LIST_LENGTH,
         LIST_OF,
         LIST_TO_ARRAY,
         MAP_OF,
@@ -21,6 +25,7 @@
         public string Name { get; private set; }
         public SystemFunctionType SystemId { get; private set; }
         public Type FunctionReturnType { get; private set; }
+        public Expression RootContext { get; set; }
 
         public SystemFunction(Token firstToken, SystemFunctionType typeMethod, Type baseType, Token nameToken) : base(firstToken)
         {
@@ -32,6 +37,7 @@
 
         public SystemFunction(Token dollarToken, Token nameToken) : base(dollarToken)
         {
+            this.RootContext = null;
             this.NameToken = nameToken;
             this.Name = nameToken.Value;
             this.SystemId = IdentifyFunction(dollarToken, this.Name);

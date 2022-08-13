@@ -162,13 +162,13 @@ namespace Vanilla.Transpiler
             }
         }
 
-        protected override void SerializeAssignmentToField(DotField target, Assignment asgn, bool omitSemicolon, bool floatCast)
+        protected override void SerializeAssignmentToField(FieldReference target, Assignment asgn, bool omitSemicolon, bool floatCast)
         {
             string op = asgn.Op.Value;
             if (!omitSemicolon) ApplyExecPrefix();
 
-            SerializeExpression(target.Root, false);
-            Append(".f_" + target.FieldName);
+            SerializeExpression(target.InstanceContext, false);
+            Append(".f_" + target.FieldDefinition.Name);
             Append(" = ");
             if (floatCast)
             {
@@ -309,20 +309,23 @@ namespace Vanilla.Transpiler
             Append(this.NL);
         }
 
-        protected override void SerializeMethodInvocation(Expression root, string methodName, Expression[] args, bool useWrap)
+        protected override void SerializeMethodInvocation(MethodInvocation mi, bool useWrap)
         {
-            Append("mt_");
-            Append(root.ResolvedType.ResolvedClass.Name);
-            Append('_');
-            Append(methodName);
-            Append('(');
-            SerializeExpression(root, true);
-            for (int i = 0; i < args.Length; i++)
+            // TODO: check if the root expression is simple like a variable 
+            // and just duplicate the instance context twice instead of this
+            // lambda nonsense.
+            Append("((_t) => _t.value.f_");
+            Append(mi.FuncRef.FunctionDefinition.Name);
+            Append("(_t");
+            for (int i = 0; i < mi.ArgList.Length; i++)
             {
                 Append(", ");
-                SerializeExpression(args[i], true);
+                SerializeExpression(mi.ArgList[i], true);
             }
+            Append("))(");
+            SerializeExpression(mi.InstanceContext, true);
             Append(')');
+            if (!useWrap) Append(".value");
         }
 
         protected override void SerializeExpressionAsExecutable(ExpressionAsExecutable exex, bool omitSemicolon)
@@ -336,6 +339,14 @@ namespace Vanilla.Transpiler
             {
                 ApplyExecSuffix();
             }
+        }
+
+        protected override void SerializeFieldReference(FieldReference fieldRef, bool useWrap)
+        {
+            SerializeExpression(fieldRef.InstanceContext, false);
+            Append(".f_");
+            Append(fieldRef.FieldDefinition.Name);
+            if (!useWrap) Append(".value");
         }
 
         protected override void SerializeForLoop(ForLoop floop)
@@ -719,6 +730,15 @@ namespace Vanilla.Transpiler
             Append(").push(");
             SerializeExpression(itemExpr, true);
             Append(")");
+        }
+
+        protected override void SerializeSysFuncListLength(Expression expr, bool useWrap)
+        {
+            if (useWrap) Append("vutilGetInt(");
+            Append('(');
+            SerializeExpression(expr, false);
+            Append(").length");
+            if (useWrap) Append(')');
         }
 
         protected override void SerializeSysFuncListOf(Type itemType, Expression[] args, bool useWrap)

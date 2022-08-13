@@ -8,6 +8,8 @@ namespace Vanilla.ParseTree
         public Token ClassNameToken { get; private set; }
         public Expression[] Args { get; private set; }
 
+        // TODO: delete this class and create a ConstructorReference node in the parse tree instead.
+        // Leverage the argument handling code of FunctionInvocation instead of duplicating it here.
         public ConstructorInvocation(Token newToken, Token classNameToken, IList<Expression> args) : base(newToken)
         {
             this.ClassNameToken = classNameToken;
@@ -25,8 +27,7 @@ namespace Vanilla.ParseTree
 
         public override Expression ResolveTypes(Resolver resolver, Type nullHint)
         {
-            this.ResolvedType = Type.GetInstanceType(this.ClassNameToken.Value);
-            ClassDefinition cd = this.ResolvedType.ResolvedClass;
+            ClassDefinition cd = resolver.GetClassByName(this.ClassNameToken.Value);
             ConstructorDefinition ctor = cd.Constructor;
             if (ctor.Args.Length != this.Args.Length)
             {
@@ -38,7 +39,7 @@ namespace Vanilla.ParseTree
                 this.Args[i] = this.Args[i].ResolveTypes(resolver, ctor.Args[i].Type);
             }
 
-            this.ResolvedType.Resolve(resolver);
+            this.ResolvedType = Type.GetInstanceType(cd);
             return this;
         }
     }

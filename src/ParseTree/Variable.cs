@@ -1,4 +1,6 @@
-﻿namespace Vanilla.ParseTree
+﻿using System.Linq;
+
+namespace Vanilla.ParseTree
 {
     internal class Variable : Expression
     {
@@ -21,10 +23,15 @@
                 return this;
             }
 
-            FunctionDefinition fd = resolver.GetFunctionByName(this.Name);
-            if (fd != null)
+            FunctionDefinition funcDef = resolver.GetFunctionByName(this.Name);
+            if (funcDef != null)
             {
-                return new FunctionReference(this.NameToken, fd);
+                FunctionReference fr = new FunctionReference(
+                    this.NameToken,
+                    funcDef,
+                    Type.GetFunctionType(funcDef.ReturnType, funcDef.Args.Select(arg => arg.Type).ToArray()));
+                
+                return fr;
             }
 
             throw new ParserException(this, "The variable '" + this.Name + "' is not declared.");

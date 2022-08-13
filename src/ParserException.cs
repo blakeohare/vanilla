@@ -13,9 +13,14 @@
 
         internal static void EnsureArgCount(ParseTree.Entity entity, int expectedCount, int actualCount)
         {
+            EnsureArgCount(entity.FirstToken, expectedCount, actualCount);
+        }
+
+        internal static void EnsureArgCount(Token token, int expectedCount, int actualCount)
+        {
             if (expectedCount != actualCount)
             {
-                throw new ParserException(entity, "Incorrect number of arguments. Expected " + expectedCount + " but found " + actualCount + " instead.");
+                throw new ParserException(token, "Incorrect number of arguments. Expected " + expectedCount + " but found " + actualCount + " instead.");
             }
         }
     }
