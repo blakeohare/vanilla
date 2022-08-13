@@ -60,14 +60,13 @@ namespace Vanilla.ParseTree
 
         public override Expression ResolveTypes(Resolver resolver)
         {
-            this.ResolveArgTypes(resolver);
             this.Root.ResolveTypes(resolver);
+            this.ResolveArgTypes(resolver);
 
             if (this.Root is DotField)
             {
                 DotField df = (DotField)this.Root;
                 string fieldName = df.FieldName;
-                df.Root = df.Root.ResolveTypes(resolver);
                 Type rootType = df.Root.ResolvedType;
                 string signature;
                 SystemFunctionInvocation sfi = null;
@@ -103,6 +102,21 @@ namespace Vanilla.ParseTree
                     case "list.toArray":
                         sfi = new SystemFunctionInvocation(this.FirstToken, SystemFunctionType.LIST_TO_ARRAY, df.Root, this.ArgList);
                         resolvedType = Type.GetArrayType(rootType.Generics[0]);
+                        break;
+
+                    case "string.replace":
+                        sfi = new SystemFunctionInvocation(this.FirstToken, SystemFunctionType.STRING_REPLACE, df.Root, this.ArgList);
+                        resolvedType = Type.STRING;
+                        break;
+
+                    case "string.toCharacterArray":
+                        sfi = new SystemFunctionInvocation(this.FirstToken, SystemFunctionType.STRING_TO_CHARACTER_ARRAY, df.Root, this.ArgList);
+                        resolvedType = Type.GetArrayType(Type.STRING);
+                        break;
+
+                    case "string.trim":
+                        sfi = new SystemFunctionInvocation(this.FirstToken, SystemFunctionType.STRING_TRIM, df.Root, this.ArgList);
+                        resolvedType = Type.STRING;
                         break;
 
                     default:

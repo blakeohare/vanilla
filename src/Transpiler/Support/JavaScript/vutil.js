@@ -14,6 +14,17 @@
 		}
 		return { type: 'I', value: n };
 	};
+	let vutilGetString = (s) => {
+		if (s.length < 2) {
+			if (s.length === 0) return vctx.emptyString;
+			let o = vctx.commonStrings[s];
+			if (o) return o;
+			o = { type: 'S', value: s };
+			vctx.commonStrings[s] = o;
+			return o;
+		}
+		return { type: 'S', value: s };
+	};
 	let vutilMapSet = (wm, wk, wv) => {
 		let nk = wk.value;
 		let i = wm.nativeKeyToIndex[nk];
@@ -123,6 +134,7 @@
 	return {
 		vutilGetCommonString,
 		vutilGetInt,
+		vutilGetString,
 		vutilMapSet,
 		vutilNewInstance,
 		vutilNewMap,

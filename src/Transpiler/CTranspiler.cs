@@ -660,6 +660,21 @@ namespace Vanilla.Transpiler
             if (useWrap) Append(')');
         }
 
+        protected override void SerializeSysFuncStringReplace(Expression str, Expression needle, Expression newValue, bool useWrap)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        protected override void SerializeSysFuncStringToCharArray(Expression str, bool useWrap)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        protected override void SerializeSysFuncStringTrim(Expression str, bool useWrap)
+        {
+            throw new System.NotImplementedException();
+        }
+
         protected override void SerializeSysPropListLength(Expression expr, bool useWrap)
         {
             throw new System.NotImplementedException();

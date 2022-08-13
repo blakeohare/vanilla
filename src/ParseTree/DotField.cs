@@ -84,6 +84,7 @@ namespace Vanilla.ParseTree
             return this;
         }
 
+        private static Type[] NO_ARGS = new Type[0];
         private Type GetPrimitiveFieldType(Type rootType, string id)
         {
             Type itemType = rootType.Generics.Length == 1 ? rootType.Generics[0] : null;
@@ -91,8 +92,10 @@ namespace Vanilla.ParseTree
             {
                 case "list.add": return Type.GetFunctionType(Type.VOID, new Type[] { itemType });
                 case "list.length": return Type.INT;
-                case "list.toArray": return Type.GetFunctionType(Type.GetArrayType(itemType), new Type[0]);
-
+                case "list.toArray": return Type.GetFunctionType(Type.GetArrayType(itemType), NO_ARGS);
+                case "string.replace": return Type.GetFunctionType(Type.STRING, new Type[] { Type.STRING, Type.STRING });
+                case "string.trim": return Type.GetFunctionType(Type.STRING, NO_ARGS);
+                case "string.toCharacterArray": return Type.GetFunctionType(Type.GetArrayType(Type.STRING), NO_ARGS);
                 default:
                     throw new ParserException(this.DotToken, "There is no field named " + id + " on type " + rootType.RootType + ".");
             }

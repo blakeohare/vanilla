@@ -42,6 +42,9 @@ namespace Vanilla.ParseTree
         internal void EnsureArgsCompatible()
         {
             Expression arg1 = this.ArgList.Length > 0 ? this.ArgList[0] : null;
+            Expression arg2 = this.ArgList.Length > 1 ? this.ArgList[1] : null;
+            Expression arg3 = this.ArgList.Length > 2 ? this.ArgList[2] : null;
+
             switch (this.SysFuncId)
             {
                 case SystemFunctionType.ARRAY_CAST_FROM:
@@ -100,8 +103,23 @@ namespace Vanilla.ParseTree
                     }
                     break;
 
-                case SystemFunctionType.FLOOR:
+                case SystemFunctionType.STRING_REPLACE:
+                    {
+                        this.EnsureArgCount(3);
+                        if (!arg2.ResolvedType.IsString) throw new ParserException(arg2, "string.replace() requires two strings as arguments.");
+                        if (!arg3.ResolvedType.IsString) throw new ParserException(arg3, "string.replace() requires two strings as arguments.");
+                    }
                     break;
+
+                case SystemFunctionType.STRING_TO_CHARACTER_ARRAY:
+                case SystemFunctionType.STRING_TRIM:
+                    {
+                        this.EnsureArgCount(1);
+                    }
+                    break;
+
+                case SystemFunctionType.FLOOR:
+                    throw new NotImplementedException();
 
                 default:
                     throw new Exception();

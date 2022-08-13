@@ -10,6 +10,9 @@
         LIST_TO_ARRAY,
         MAP_OF,
         SQRT,
+        STRING_REPLACE,
+        STRING_TO_CHARACTER_ARRAY,
+        STRING_TRIM,
     }
 
     internal class SystemFunction : Expression

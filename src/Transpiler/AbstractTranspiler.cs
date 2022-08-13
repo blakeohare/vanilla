@@ -140,6 +140,9 @@ namespace Vanilla.Transpiler
         protected abstract void SerializeSysFuncListToArray(Type itemType, Expression listExpr, bool useWrap);
         protected abstract void SerializeSysFuncMapOf(Type keyType, Type valueType, Expression[] args, bool useWrap);
         protected abstract void SerializeSysFuncSqrt(Expression expr, bool useWrap);
+        protected abstract void SerializeSysFuncStringReplace(Expression str, Expression needle, Expression newValue, bool useWrap);
+        protected abstract void SerializeSysFuncStringToCharArray(Expression str, bool useWrap);
+        protected abstract void SerializeSysFuncStringTrim(Expression str, bool useWrap);
         protected abstract void SerializeSysPropListLength(Expression expr, bool useWrap);
 
         internal void SerializeExecutable(Executable ex, bool omitSemicolon)
@@ -226,7 +229,7 @@ namespace Vanilla.Transpiler
                     this.SerializeConstructorInvocation((ConstructorInvocation)expr);
                     break;
 
-                default: throw new NotImplementedException();
+                default: throw new NotImplementedException(name);
             }
         }
 
@@ -299,6 +302,9 @@ namespace Vanilla.Transpiler
                 case SystemFunctionType.LIST_TO_ARRAY: this.SerializeSysFuncListToArray(sfi.ResolvedType.ItemType, sfi.ArgList[0], useWrap); break;
                 case SystemFunctionType.MAP_OF: this.SerializeSysFuncMapOf(sfi.ResolvedType.KeyType, sfi.ResolvedType.ValueType, sfi.ArgList, useWrap); break;
                 case SystemFunctionType.SQRT: this.SerializeSysFuncSqrt(sfi.ArgList[0], useWrap); break;
+                case SystemFunctionType.STRING_TO_CHARACTER_ARRAY: this.SerializeSysFuncStringToCharArray(sfi.ArgList[0], useWrap); break;
+                case SystemFunctionType.STRING_TRIM: this.SerializeSysFuncStringTrim(sfi.ArgList[0], useWrap); break;
+                case SystemFunctionType.STRING_REPLACE: this.SerializeSysFuncStringReplace(sfi.ArgList[0], sfi.ArgList[1], sfi.ArgList[2], useWrap); break;
 
                 default: throw new NotImplementedException();
             }

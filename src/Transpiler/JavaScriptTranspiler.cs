@@ -46,6 +46,7 @@ namespace Vanilla.Transpiler
             string[] vutilMethods = new string[] {
                 "vutilGetCommonString",
                 "vutilGetInt",
+                "vutilGetString",
                 "vutilMapSet",
                 "vutilNewInstance",
                 "vutilNewMap",
@@ -605,7 +606,7 @@ namespace Vanilla.Transpiler
         protected override void SerializeStringConstant(StringConstant sc, bool useWrap)
         {
             // TODO: this is a terrible hack
-            string codeValue = "'" + sc.Value.Replace("\\", "\\\\").Replace("'", "\\'") + "'";
+            string codeValue = "`" + sc.Value.Replace("\\", "\\\\").Replace("'", "\\'") + "`";
             if (useWrap)
             {
                 if (sc.Value.Length == 0)
@@ -712,6 +713,38 @@ namespace Vanilla.Transpiler
             Append("Math.sqrt(");
             SerializeExpression(expr, false);
             Append(')');
+            if (useWrap) Append(')');
+        }
+
+        protected override void SerializeSysFuncStringReplace(Expression str, Expression needle, Expression newValue, bool useWrap)
+        {
+            if (useWrap) Append("vutilGetString(");
+            Append('(');
+            SerializeExpression(str, false);
+            Append(").split(");
+            SerializeExpression(needle, false);
+            Append(").join(");
+            SerializeExpression(newValue, false);
+            Append(')');
+            if (useWrap) Append(')');
+        }
+
+        protected override void SerializeSysFuncStringToCharArray(Expression str, bool useWrap)
+        {
+            // TODO: helper function that takes into consideration surrogate pairs.
+            if (useWrap) Append("{ type: 'A', value: ");
+            Append("(");
+            SerializeExpression(str, false);
+            Append(").split('').map(vutilGetCommonString)"); // because they're single characters
+            if (useWrap) Append(" }");
+        }
+
+        protected override void SerializeSysFuncStringTrim(Expression str, bool useWrap)
+        {
+            if (useWrap) Append("vutilGetString(");
+            Append('(');
+            SerializeExpression(str, false);
+            Append(").trim()");
             if (useWrap) Append(')');
         }
 
