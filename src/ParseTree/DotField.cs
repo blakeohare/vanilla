@@ -90,6 +90,7 @@ namespace Vanilla.ParseTree
             Type itemType = rootType.Generics.Length == 1 ? rootType.Generics[0] : null;
             switch (id)
             {
+                case "array.length": return Type.INT;
                 case "list.add": return Type.GetFunctionType(Type.VOID, new Type[] { itemType });
                 case "list.length": return Type.INT;
                 case "list.toArray": return Type.GetFunctionType(Type.GetArrayType(itemType), NO_ARGS);

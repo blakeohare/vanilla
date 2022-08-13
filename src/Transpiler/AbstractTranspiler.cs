@@ -108,6 +108,7 @@ namespace Vanilla.Transpiler
         }
 
         protected abstract void SerializeArithmeticPairOp(ArithmeticPairOp apo, bool useWrap);
+        protected abstract void SerializeArrayIndex(ArrayIndex arrIndex, bool useWrap);
         protected abstract void SerializeAssignmentToVariable(Variable target, Assignment asgn, bool omitSemicolon, bool floatCast);
         protected abstract void SerializeAssignmentToMap(MapAccess target, Assignment asgn, bool omitSemicolon, bool floatCast);
         protected abstract void SerializeAssignmentToField(DotField target, Assignment asgn, bool omitSemicolon, bool floatCast);
@@ -128,6 +129,8 @@ namespace Vanilla.Transpiler
         protected abstract void SerializeNullConstant(bool useWrap);
         protected abstract void SerializePairComparision(PairComparison pc, bool useWrap);
         protected abstract void SerializeReturnStatement(ReturnStatement rs);
+        protected abstract void SerializeStringComparison(Expression str1, Expression str2, bool useWrap);
+        protected abstract void SerializeStringConcatChain(StringConcatChain strChain, bool useWrap);
         protected abstract void SerializeStringConstant(StringConstant sc, bool useWrap);
         protected abstract void SerializeThisConstant(ThisConstant thiz, bool useWrap);
         protected abstract void SerializeVariable(Variable vd, bool useWrap);
@@ -189,19 +192,32 @@ namespace Vanilla.Transpiler
             switch (name)
             {
                 case "ArithmeticPairOp": this.SerializeArithmeticPairOp((ArithmeticPairOp)expr, useWrap); break;
+                case "ArrayIndex": this.SerializeArrayIndex((ArrayIndex)expr, useWrap); break;
                 case "BooleanConstant": this.SerializeBooleanConstant((BooleanConstant)expr, useWrap); break;
                 case "FunctionInvocation": this.SerializeFunctionInvocation((FunctionInvocation)expr, useWrap); break;
                 case "IntegerConstant": this.SerializeIntegerConstant((IntegerConstant)expr, useWrap); break;
                 case "LocalFunctionInvocation": this.SerializeLocalFunctionInvocation((LocalFunctionInvocation)expr, useWrap); break;
                 case "MapAccess": this.SerializeMapAccess((MapAccess)expr, useWrap); break;
                 case "NullConstant": this.SerializeNullConstant(useWrap); break;
-                case "PairComparison": this.SerializePairComparision((PairComparison)expr, useWrap); break;
+                case "StringConcatChain": this.SerializeStringConcatChain((StringConcatChain)expr, useWrap); break;
                 case "StringConstant": this.SerializeStringConstant((StringConstant)expr, useWrap); break;
                 case "SystemFunctionInvocation": this.SerializeSystemFunctionInvocation((SystemFunctionInvocation)expr, useWrap); break;
                 case "ThisConstant": this.SerializeThisConstant((ThisConstant)expr, useWrap); break;
                 case "Variable": this.SerializeVariable((Variable)expr, useWrap); break;
 
                 case "OpChain": throw new Exception(); // OpChains should be resolved at this point into more specific types
+
+                case "PairComparison":
+                    PairComparison pc = (PairComparison)expr;
+                    if (pc.Left.ResolvedType.IsString && pc.Right.ResolvedType.IsString && pc.Op.Value == "==")
+                    {
+                        this.SerializeStringComparison(pc.Left, pc.Right, useWrap);
+                    }
+                    else
+                    {
+                        this.SerializePairComparision((PairComparison)expr, useWrap);
+                    }
+                    break;
 
                 case "DotField":
                     DotField dotField = (DotField)expr;

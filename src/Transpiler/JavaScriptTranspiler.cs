@@ -149,6 +149,19 @@ namespace Vanilla.Transpiler
             if (useWrap || !usingHelperFunction) Append(')');
         }
 
+        protected override void SerializeArrayIndex(ArrayIndex arrIndex, bool useWrap)
+        {
+            SerializeExpression(arrIndex.Root, false);
+            Append('[');
+            SerializeExpression(arrIndex.Index, false);
+            Append(']');
+
+            if (!useWrap)
+            {
+                Append(".value");
+            }
+        }
+
         protected override void SerializeAssignmentToField(DotField target, Assignment asgn, bool omitSemicolon, bool floatCast)
         {
             string op = asgn.Op.Value;
@@ -601,6 +614,45 @@ namespace Vanilla.Transpiler
             Append("return ");
             SerializeExpression(rs.Value, true);
             ApplyExecSuffix();
+        }
+
+        protected override void SerializeStringComparison(Expression str1, Expression str2, bool useWrap)
+        {
+            Append('(');
+            Append('(');
+            SerializeExpression(str1, false);
+            Append(") === (");
+            SerializeExpression(str2, false);
+            Append(')');
+            if (useWrap) Append(" ? vctx.constTrue : vctx.constFalse)");
+            else Append(')');
+        }
+
+        protected override void SerializeStringConcatChain(StringConcatChain strChain, bool useWrap)
+        {
+            if (useWrap) Append("vutilGetString(");
+            else Append('(');
+
+            if (strChain.Expressions.Length == 2)
+            {
+                Append('(');
+                SerializeExpression(strChain.Expressions[0], false);
+                Append(") + (");
+                SerializeExpression(strChain.Expressions[1], false);
+                Append(')');
+            }
+            else
+            {
+                Append('[');
+                for (int i = 0; i < strChain.Expressions.Length; i++)
+                {
+                    if (i > 0) Append(", ");
+                    SerializeExpression(strChain.Expressions[i], false);
+                }
+                Append("].join('')");
+            }
+
+            Append(')');
         }
 
         protected override void SerializeStringConstant(StringConstant sc, bool useWrap)

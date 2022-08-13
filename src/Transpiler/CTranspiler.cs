@@ -155,6 +155,11 @@ namespace Vanilla.Transpiler
             Append(NL);
         }
 
+        protected override void SerializeArrayIndex(ArrayIndex arrIndex, bool useWrap)
+        {
+            throw new System.NotImplementedException();
+        }
+
         protected override void SerializeFunction(FunctionDefinition fd)
         {
             Append(CurrentTab);
@@ -333,6 +338,16 @@ namespace Vanilla.Transpiler
         }
 
         protected override void SerializeNullConstant(bool useWrap)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        protected override void SerializeStringComparison(Expression str1, Expression str2, bool useWrap)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        protected override void SerializeStringConcatChain(StringConcatChain strChain, bool useWrap)
         {
             throw new System.NotImplementedException();
         }
