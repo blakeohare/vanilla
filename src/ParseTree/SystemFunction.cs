@@ -41,6 +41,7 @@
             this.NameToken = nameToken;
             this.Name = nameToken.Value;
             this.SystemId = IdentifyFunction(dollarToken, this.Name);
+            this.FunctionReturnType = GetFunctionReturnType(this.SystemId);
         }
 
         private static SystemFunctionType IdentifyFunction(Token dollarToken, string name)
@@ -53,6 +54,16 @@
             }
         }
 
+        private static Type GetFunctionReturnType(SystemFunctionType name)
+        {
+            switch (name)
+            {
+                case SystemFunctionType.FLOOR: return Type.INT;
+                case SystemFunctionType.SQRT: return Type.FLOAT;
+                default: throw new System.Exception();
+            }
+        }
+
         public override Expression ResolveVariables(Resolver resolver, LexicalScope scope)
         {
             return this;
@@ -60,7 +71,7 @@
 
         public override Expression ResolveTypes(Resolver resolver, Type nullHint)
         {
-            throw new ParserException(this.FirstToken, "Type methods and system functions must be invoked and cannot be passed as function pointers.");
+            return this;
         }
     }
 }

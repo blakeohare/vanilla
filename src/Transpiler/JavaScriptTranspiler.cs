@@ -349,6 +349,20 @@ namespace Vanilla.Transpiler
             if (!useWrap) Append(".value");
         }
 
+        protected override void SerializeFloatCast(FloatCast fc, bool useWrap)
+        {
+            if (!useWrap)
+            {
+                SerializeExpression(fc.Expression, false);
+            }
+            else
+            {
+                Append("vutilGetFloat(");
+                SerializeExpression(fc.Expression, false);
+                Append(')');
+            }
+        }
+
         protected override void SerializeForLoop(ForLoop floop)
         {
             ApplyExecPrefix();

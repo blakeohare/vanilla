@@ -493,6 +493,11 @@ namespace Vanilla.Transpiler
             throw new System.NotImplementedException();
         }
 
+        protected override void SerializeFloatCast(FloatCast fc, bool useWrap)
+        {
+            throw new System.NotImplementedException();
+        }
+
         protected override void SerializeForLoop(ForLoop floop)
         {
             foreach (Executable initEx in floop.Init)

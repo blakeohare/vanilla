@@ -17,15 +17,21 @@ const createVanillaContext = () => {
 	let emptyString = { type: 'S', value: "" };
 	commonStrings[""] = emptyString;
 
+	let constZeroF = { type: 'F', value: 0.0 };
+	let constNull = { type: 'N' };
+
 	return {
 		constTrue,
 		constFalse,
+		constNull,
 		numPos,
 		numNeg,
 		constZero,
 		constOne,
+		constZeroF,
 		commonStrings,
 		emptyString,
+		classMetadata: {},
 	};
 };
 
@@ -46,6 +52,17 @@ const createVutil = (vctx) => {
 		}
 		return { type: 'I', value: n };
 	};
+	let vutilGetString = (s) => {
+		if (s.length < 2) {
+			if (s.length === 0) return vctx.emptyString;
+			let o = vctx.commonStrings[s];
+			if (o) return o;
+			o = { type: 'S', value: s };
+			vctx.commonStrings[s] = o;
+			return o;
+		}
+		return { type: 'S', value: s };
+	};
 	let vutilMapSet = (wm, wk, wv) => {
 		let nk = wk.value;
 		let i = wm.nativeKeyToIndex[nk];
@@ -56,6 +73,10 @@ const createVutil = (vctx) => {
 		} else {
 			wm.values[i] = wv;
 		}
+	};
+	let vutilNewInstance = (name) => {
+		let obj = { '@class': name, ...vctx.classMetadata[name].methods };
+		return { type: 'O', value: obj };
 	};
 	let vutilNewMap = (isIntKeys) => {
 		return { type: 'M', keys: [], values: [], nativeKeyToIndex: {}, isIntKeys };
@@ -97,6 +118,7 @@ const createVutil = (vctx) => {
 		switch (typeof value) {
 			case 'number':
 				if (value % 1 === 0) return vutilGetInt(value);
+				if (value === 0) return vctx.constZeroF;
 				return { type: 'F', value };
 
 			case 'string':
@@ -122,12 +144,15 @@ const createVutil = (vctx) => {
 	// TODO: support cyclic data structures
 	let vutilUnwrapNative = (value) => { // TODO: should be vutilUnwrap*To*Native
 		switch (value.type) {
-			case 'B':
 			case 'N':
+				return null;
+			case 'B':
 			case 'I':
 			case 'F':
 			case 'S':
 				return value.value;
+			case 'O':
+				throw new Error(); // TODO: unwrap objects
 			case 'A':
 				return value.value.map(vutilUnwrapNative);
 			case 'M':
@@ -147,7 +172,9 @@ const createVutil = (vctx) => {
 	return {
 		vutilGetCommonString,
 		vutilGetInt,
+		vutilGetString,
 		vutilMapSet,
+		vutilNewInstance,
 		vutilNewMap,
 		vutilSafeMod,
 		vutilUnwrapNative,
@@ -160,13 +187,13 @@ const createVutil = (vctx) => {
 
 const vctx = createVanillaContext();
 const vutil = createVutil(vctx);
-const { vutilGetCommonString, vutilGetInt, vutilMapSet, vutilNewMap, vutilSafeMod, vutilUnwrapNative, vutilWrapArray, vutilWrapNative } = vutil;
+const { vutilGetCommonString, vutilGetInt, vutilGetString, vutilMapSet, vutilNewInstance, vutilNewMap, vutilSafeMod, vutilUnwrapNative, vutilWrapArray, vutilWrapNative } = vutil;
 
 const findPrimes = (upperLimit) => {
-    let primes = generatePrimeList(vutilGetInt(1), upperLimit);
+    let primes = generatePrimeList(vctx.numPos[1], upperLimit);
     let output = vutilNewMap(false);
-    vutilMapSet(output, vutilGetCommonString('ok'), vctx.constTrue);
-    vutilMapSet(output, vutilGetCommonString('nums'), vutilWrapArray((primes.value).slice(0)));
+    vutilMapSet(output, vutilGetCommonString(`ok`), vctx.constTrue);
+    vutilMapSet(output, vutilGetCommonString(`nums`), vutilWrapArray((primes.value).slice(0)));
     return output;
 };
 
@@ -198,7 +225,7 @@ const isPrime = (value) => {
         return vctx.constFalse;
     }
     let maxCheck = vutilGetInt(Math.floor(Math.sqrt(value.value)));
-    for (let div = vutilGetInt(3); (div.value) <= (maxCheck.value); div = vutilGetInt(div.value + (2))) {
+    for (let div = vctx.numPos[3]; (div.value) <= (maxCheck.value); div = vutilGetInt(div.value + (2))) {
         if ((vutilSafeMod(value.value, div.value)) == (0)) {
             return vctx.constFalse;
         }
@@ -206,6 +233,8 @@ const isPrime = (value) => {
     }
     return vctx.constTrue;
 };
+
+
 
 
 

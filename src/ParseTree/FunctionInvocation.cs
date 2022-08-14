@@ -78,12 +78,20 @@ namespace Vanilla.ParseTree
                     }
                     break;
 
+                case SystemFunctionType.FLOOR:
+                    EnsureArgsCompatible(resolver, new Type[] { Type.FLOAT }, false);
+                    break;
+
                 case SystemFunctionType.LIST_ADD:
                     EnsureArgsCompatible(resolver, new Type[] { Type.GetListType(itemType), itemType }, true);
                     break;
 
                 case SystemFunctionType.LIST_OF:
                     EnsureArgsCompatible(resolver, CreateTypeArrayOfRepeatedType(sysFunc.FunctionReturnType.ItemType, this.ArgList.Length), false);
+                    break;
+
+                case SystemFunctionType.LIST_TO_ARRAY:
+                    EnsureArgsCompatible(resolver, new Type[] { Type.GetListType(itemType) }, true);
                     break;
 
                 case SystemFunctionType.MAP_OF:
@@ -95,6 +103,10 @@ namespace Vanilla.ParseTree
                         expectedTypes.Add(valueType);
                     }
                     EnsureArgsCompatible(resolver, expectedTypes, false);
+                    break;
+
+                case SystemFunctionType.SQRT:
+                    EnsureArgsCompatible(resolver, new Type[] { Type.FLOAT }, false);
                     break;
 
                 case SystemFunctionType.STRING_REPLACE:
@@ -178,7 +190,7 @@ namespace Vanilla.ParseTree
 
             if (expectedType.IsFloat && actualType.IsInteger)
             {
-                throw new ParserException(arg.FirstToken, "TODO: casting int to float");
+                return new FloatCast(arg.FirstToken, arg) { ResolvedType = Type.FLOAT };
             }
             return arg;
         }

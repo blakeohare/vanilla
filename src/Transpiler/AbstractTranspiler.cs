@@ -117,6 +117,7 @@ namespace Vanilla.Transpiler
         protected abstract void SerializeConstructorInvocation(ConstructorInvocation ctorInvoke);
         protected abstract void SerializeExpressionAsExecutable(ExpressionAsExecutable exex, bool omitSemicolon);
         protected abstract void SerializeFieldReference(FieldReference fieldRef, bool useWrap);
+        protected abstract void SerializeFloatCast(FloatCast fc, bool useWrap);
         protected abstract void SerializeForLoop(ForLoop floop);
         protected abstract void SerializeForRangeLoop(ForRangeLoop frl);
         protected abstract void SerializeFunction(FunctionDefinition fd);
@@ -197,6 +198,7 @@ namespace Vanilla.Transpiler
                 case "ArrayIndex": this.SerializeArrayIndex((ArrayIndex)expr, useWrap); break;
                 case "BooleanConstant": this.SerializeBooleanConstant((BooleanConstant)expr, useWrap); break;
                 case "FieldReference": this.SerializeFieldReference((FieldReference)expr, useWrap); break;
+                case "FloatCast": this.SerializeFloatCast((FloatCast)expr, useWrap); break;
                 case "IntegerConstant": this.SerializeIntegerConstant((IntegerConstant)expr, useWrap); break;
                 case "LocalFunctionInvocation": this.SerializeLocalFunctionInvocation((LocalFunctionInvocation)expr, useWrap); break;
                 case "MapAccess": this.SerializeMapAccess((MapAccess)expr, useWrap); break;
