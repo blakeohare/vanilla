@@ -260,6 +260,11 @@ namespace Vanilla.Transpiler
             if (!omitSemicolon) ApplyExecSuffix();
         }
 
+        protected override void SerializeSysFuncMapContains(Expression mapExpr, Expression keyExpr, bool useWrap)
+        {
+            throw new System.NotImplementedException();
+        }
+
         protected override void SerializeSysFuncMapOf(Type keyType, Type valueType, Expression[] args, bool useWrap)
         {
             EnsureUsingWrap(useWrap);
@@ -353,6 +358,11 @@ namespace Vanilla.Transpiler
         }
 
         protected override void SerializeThisConstant(ThisConstant thiz, bool useWrap)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        protected override void SerializeBooleanCombination(BooleanCombination bc, bool useWrap)
         {
             throw new System.NotImplementedException();
         }
@@ -675,6 +685,11 @@ namespace Vanilla.Transpiler
             SerializeExpression(expr, false);
             Append(")");
             if (useWrap) Append(')');
+        }
+
+        protected override void SerializeSysFuncStringFirstCharCode(Expression str, bool useWrap)
+        {
+            throw new System.NotImplementedException();
         }
 
         protected override void SerializeSysFuncStringReplace(Expression str, Expression needle, Expression newValue, bool useWrap)

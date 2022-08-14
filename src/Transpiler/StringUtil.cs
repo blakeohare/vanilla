@@ -21,7 +21,7 @@ namespace Vanilla.Transpiler
                     case '\0': sb.Append("\\0"); break;
                     case '\t': sb.Append("\\t"); break;
                     case '\'': sb.Append("\\'"); break;
-                    case '"': sb.Append('"'); break;
+                    case '"': sb.Append("\\\""); break;
                     case '\\': sb.Append("\\\\"); break;
                     default:
                         sb.Append(c);

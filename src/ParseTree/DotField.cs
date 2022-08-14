@@ -134,9 +134,17 @@ namespace Vanilla.ParseTree
                     funcReturnType = Type.INT;
                     useDummyInvocation = true;
                     break;
+                case "map.contains":
+                    sysFunc = SystemFunctionType.MAP_CONTAINS;
+                    funcReturnType = Type.BOOL;
+                    break;
                 case "list.toArray":
                     sysFunc = SystemFunctionType.LIST_TO_ARRAY;
                     funcReturnType = Type.GetArrayType(rootType.ItemType);
+                    break;
+                case "string.firstCharCode":
+                    sysFunc = SystemFunctionType.STRING_FIRST_CHAR_CODE;
+                    funcReturnType = Type.INT;
                     break;
                 case "string.replace":
                     sysFunc = SystemFunctionType.STRING_REPLACE;

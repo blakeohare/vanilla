@@ -29,6 +29,7 @@
             switch (this.Root.ResolvedType.RootType)
             {
                 case "array":
+                case "list":
                     if (keyType.RootType != "int") throw new ParserException(this.Index, "Cannot index into an array with this type. Index must be an integer.");
                     return new ArrayIndex(this.Root, this.OpenBracket, this.Index);
 

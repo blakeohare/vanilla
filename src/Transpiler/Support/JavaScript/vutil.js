@@ -43,6 +43,13 @@
 	let vutilNewMap = (isIntKeys) => {
 		return { type: 'M', keys: [], values: [], nativeKeyToIndex: {}, isIntKeys };
 	};
+	let vutilMapBuilder = (isIntKeys, kvpList) => {
+		let m = vutilNewMap(isIntKeys);
+		for (let i = 0; i < kvpList.length; i += 2) {
+			vutilMapSet(m, kvpList[i], kvpList[i + 1]);
+		}
+		return m;
+	};
 	let vutilWrapMap = (m, isIntKeys) => {
 		let wMap = vutilNewMap(isIntKeys);
 		let wKey;
@@ -135,6 +142,7 @@
 		vutilGetCommonString,
 		vutilGetInt,
 		vutilGetString,
+		vutilMapBuilder,
 		vutilMapSet,
 		vutilNewInstance,
 		vutilNewMap,

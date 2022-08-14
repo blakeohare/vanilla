@@ -245,6 +245,18 @@ namespace Vanilla.Transpiler
             if (!omitSemicolon) ApplyExecSuffix();
         }
 
+        protected override void SerializeBooleanCombination(BooleanCombination bc, bool useWrap)
+        {
+            Append("((");
+            SerializeExpression(bc.Left, false);
+            Append(") ");
+            Append(bc.Op.Value);
+            Append(" (");
+            SerializeExpression(bc.Right, false);
+            Append("))");
+            if (useWrap) Append(" ? vctx.constTrue : vctx.constFalse");
+        }
+
         protected override void SerializeBooleanConstant(BooleanConstant bc, bool useWrap)
         {
             if (useWrap)
@@ -775,21 +787,38 @@ namespace Vanilla.Transpiler
             if (useWrap) Append(')');
         }
 
+        protected override void SerializeSysFuncMapContains(Expression mapExpr, Expression keyExpr, bool useWrap)
+        {
+            if (useWrap) Append('(');
+            Append('(');
+            SerializeExpression(mapExpr, true);
+            Append(".nativeKeyToIndex[");
+            SerializeExpression(keyExpr, false);
+            Append("] !== undefined)");
+            if (useWrap) Append(" ? vctx.constTrue : vctx.constFalse)");
+        }
+
         protected override void SerializeSysFuncMapOf(Type keyType, Type valueType, Expression[] args, bool useWrap)
         {
             if (args.Length > 0)
             {
-                throw new System.NotImplementedException();
-            }
 
-            if (useWrap)
-            {
-                Append("vutilNewMap(" + (keyType.IsInteger ? "true" : "false") + ")");
+                Append("vutilMapBuilder(");
+                Append(keyType.IsInteger ? "true" : "false");
+                Append(", [");
+                for (int i = 0; i < args.Length; i++)
+                {
+                    if (i > 0) Append(", ");
+                    SerializeExpression(args[i], true);
+                }
+                Append("])");
             }
             else
             {
-                Append("{}");
+                Append("vutilNewMap(" + (keyType.IsInteger ? "true" : "false") + ")");
             }
+
+            if (!useWrap) throw new System.Exception(); // TODO: throw this in abstract transpiler
         }
 
         protected override void SerializeSysFuncSqrt(Expression expr, bool useWrap)
@@ -798,6 +827,14 @@ namespace Vanilla.Transpiler
             Append("Math.sqrt(");
             SerializeExpression(expr, false);
             Append(')');
+            if (useWrap) Append(')');
+        }
+
+        protected override void SerializeSysFuncStringFirstCharCode(Expression str, bool useWrap)
+        {
+            if (useWrap) Append("vutilGetInt(");
+            SerializeExpression(str, false);
+            Append(".charCodeAt(0)");
             if (useWrap) Append(')');
         }
 

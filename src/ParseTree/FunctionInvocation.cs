@@ -94,6 +94,10 @@ namespace Vanilla.ParseTree
                     EnsureArgsCompatible(resolver, new Type[] { Type.GetListType(itemType) }, true);
                     break;
 
+                case SystemFunctionType.MAP_CONTAINS:
+                    EnsureArgsCompatible(resolver, new Type[] { Type.GetMapType(keyType, valueType), keyType }, true);
+                    break;
+
                 case SystemFunctionType.MAP_OF:
                     if (this.ArgList.Length % 2 != 0) throw new ParserException(this, "map<K, V>.of() requires an even number of arguments.");
                     List<Type> expectedTypes = new List<Type>();
@@ -107,6 +111,10 @@ namespace Vanilla.ParseTree
 
                 case SystemFunctionType.SQRT:
                     EnsureArgsCompatible(resolver, new Type[] { Type.FLOAT }, false);
+                    break;
+
+                case SystemFunctionType.STRING_FIRST_CHAR_CODE:
+                    EnsureArgsCompatible(resolver, new Type[] { Type.STRING }, true);
                     break;
 
                 case SystemFunctionType.STRING_REPLACE:

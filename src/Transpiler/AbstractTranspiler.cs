@@ -112,6 +112,7 @@ namespace Vanilla.Transpiler
         protected abstract void SerializeAssignmentToVariable(Variable target, Assignment asgn, bool omitSemicolon, bool floatCast);
         protected abstract void SerializeAssignmentToMap(MapAccess target, Assignment asgn, bool omitSemicolon, bool floatCast);
         protected abstract void SerializeAssignmentToField(FieldReference target, Assignment asgn, bool omitSemicolon, bool floatCast);
+        protected abstract void SerializeBooleanCombination(BooleanCombination bc, bool useWrap);
         protected abstract void SerializeBooleanConstant(BooleanConstant bc, bool useWrap);
         protected abstract void SerializeConstructor(ConstructorDefinition ctor);
         protected abstract void SerializeConstructorInvocation(ConstructorInvocation ctorInvoke);
@@ -144,8 +145,10 @@ namespace Vanilla.Transpiler
         protected abstract void SerializeSysFuncListLength(Expression expr, bool useWrap);
         protected abstract void SerializeSysFuncListOf(Type itemType, Expression[] args, bool useWrap);
         protected abstract void SerializeSysFuncListToArray(Type itemType, Expression listExpr, bool useWrap);
+        protected abstract void SerializeSysFuncMapContains(Expression mapExpr, Expression keyExpr, bool useWrap);
         protected abstract void SerializeSysFuncMapOf(Type keyType, Type valueType, Expression[] args, bool useWrap);
         protected abstract void SerializeSysFuncSqrt(Expression expr, bool useWrap);
+        protected abstract void SerializeSysFuncStringFirstCharCode(Expression str, bool useWrap);
         protected abstract void SerializeSysFuncStringReplace(Expression str, Expression needle, Expression newValue, bool useWrap);
         protected abstract void SerializeSysFuncStringToCharArray(Expression str, bool useWrap);
         protected abstract void SerializeSysFuncStringTrim(Expression str, bool useWrap);
@@ -196,6 +199,7 @@ namespace Vanilla.Transpiler
             {
                 case "ArithmeticPairOp": this.SerializeArithmeticPairOp((ArithmeticPairOp)expr, useWrap); break;
                 case "ArrayIndex": this.SerializeArrayIndex((ArrayIndex)expr, useWrap); break;
+                case "BooleanCombination": this.SerializeBooleanCombination((BooleanCombination)expr, useWrap); break;
                 case "BooleanConstant": this.SerializeBooleanConstant((BooleanConstant)expr, useWrap); break;
                 case "FieldReference": this.SerializeFieldReference((FieldReference)expr, useWrap); break;
                 case "FloatCast": this.SerializeFloatCast((FloatCast)expr, useWrap); break;
@@ -257,8 +261,10 @@ namespace Vanilla.Transpiler
                 case SystemFunctionType.LIST_LENGTH: this.SerializeSysFuncListLength(sfi.ArgList[0], useWrap); break;
                 case SystemFunctionType.LIST_OF: this.SerializeSysFuncListOf(sfi.ResolvedType.ItemType, sfi.ArgList, useWrap); break;
                 case SystemFunctionType.LIST_TO_ARRAY: this.SerializeSysFuncListToArray(sfi.ResolvedType.ItemType, sfi.ArgList[0], useWrap); break;
+                case SystemFunctionType.MAP_CONTAINS: this.SerializeSysFuncMapContains(sfi.ArgList[0], sfi.ArgList[1], useWrap); break;
                 case SystemFunctionType.MAP_OF: this.SerializeSysFuncMapOf(sfi.ResolvedType.KeyType, sfi.ResolvedType.ValueType, sfi.ArgList, useWrap); break;
                 case SystemFunctionType.SQRT: this.SerializeSysFuncSqrt(sfi.ArgList[0], useWrap); break;
+                case SystemFunctionType.STRING_FIRST_CHAR_CODE: this.SerializeSysFuncStringFirstCharCode(sfi.ArgList[0], useWrap); break;
                 case SystemFunctionType.STRING_TO_CHARACTER_ARRAY: this.SerializeSysFuncStringToCharArray(sfi.ArgList[0], useWrap); break;
                 case SystemFunctionType.STRING_TRIM: this.SerializeSysFuncStringTrim(sfi.ArgList[0], useWrap); break;
                 case SystemFunctionType.STRING_REPLACE: this.SerializeSysFuncStringReplace(sfi.ArgList[0], sfi.ArgList[1], sfi.ArgList[2], useWrap); break;

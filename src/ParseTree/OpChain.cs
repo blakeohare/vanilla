@@ -115,6 +115,27 @@ namespace Vanilla.ParseTree
                         return new StringConcatChain(this.FirstToken, strPieces);
                     }
                 }
+
+                if (types[0].IsInteger || types[0].IsFloat)
+                {
+                    for (int i = 1; i < types.Length; i++)
+                    {
+                        if (!types[i].IsNumeric)
+                        {
+                            throw new ParserException(this.Ops[i - 1], "The " + this.Ops[i - 1].Value + " operator cannot be used with types " + types[i - 1] + " and " + types[i] + ".");
+                        }
+                    }
+                    int offset = 2;
+                    Expression pair = new ArithmeticPairOp(this.Expressions[0], this.Ops[0], this.Expressions[1]);
+                    while (offset < this.Expressions.Length)
+                    {
+                        pair = new ArithmeticPairOp(pair, this.Ops[offset - 1], this.Expressions[offset]);
+                        offset++;
+                    }
+                    return pair;
+                }
+
+                throw new ParserException(this.Ops[0], "The + operator cannot be used with types " + types[0] + " and " + types[1] + ".");
             }
 
             if (group == OpGroup.INEQUALITY || group == OpGroup.EQUALITY)
@@ -135,6 +156,21 @@ namespace Vanilla.ParseTree
                     innermost = new ArithmeticPairOp(innermost, this.Ops[i - 1], this.Expressions[i]);
                 }
                 return innermost;
+            }
+
+            if (group == OpGroup.BOOL_COMB)
+            {
+                foreach (Expression expr in this.Expressions)
+                {
+                    if (!expr.ResolvedType.IsBoolean) throw new ParserException(expr, "Expected a boolean");
+                }
+
+                Expression boolCombo = new BooleanCombination(this.Expressions[0], this.Ops[0], this.Expressions[1]);
+                for (int i = 2; i < this.Expressions.Length;i++)
+                {
+                    boolCombo = new BooleanCombination(boolCombo, this.Ops[i - 1], this.Expressions[i]);
+                }
+                return boolCombo;
             }
 
             throw new System.Exception(); // oops, didn't cover a case

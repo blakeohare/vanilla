@@ -141,6 +141,10 @@ namespace Vanilla
             {
                 return this.ItemType.TypeEqual(otherType.ItemType);
             }
+            if (this.RootType == "map")
+            {
+                return this.KeyType.TypeEqual(otherType.KeyType) && this.ValueType.TypeEqual(otherType.ValueType);
+            }
             throw new System.NotImplementedException();
         }
     }
