@@ -120,10 +120,18 @@ namespace Vanilla.ParseTree
             bool useDummyInvocation = false;
             switch (rootType.RootType + "." + this.FieldName)
             {
+                case "array.join":
+                    sysFunc = SystemFunctionType.ARRAY_JOIN;
+                    funcReturnType = Type.STRING;
+                    break;
                 case "array.length":
                     sysFunc = SystemFunctionType.ARRAY_LENGTH;
                     funcReturnType = Type.INT;
                     useDummyInvocation = true;
+                    break;
+                case "array.slice":
+                    sysFunc = SystemFunctionType.ARRAY_SLICE;
+                    funcReturnType = rootType;
                     break;
                 case "list.add":
                     sysFunc = SystemFunctionType.LIST_ADD;
@@ -162,7 +170,7 @@ namespace Vanilla.ParseTree
 
             if (sysFunc == SystemFunctionType.UNKNOWN)
             {
-                throw new ParserException(this.DotToken, "The type '" + rootType.RootType + "' does not have a field named + '." + this.FieldName + "'.");
+                throw new ParserException(this.DotToken, "The type '" + rootType.RootType + "' does not have a field named ." + this.FieldName);
             }
 
             SystemFunction sysFuncInstance = new SystemFunction(this.FirstToken, sysFunc, funcReturnType, this.FieldToken);

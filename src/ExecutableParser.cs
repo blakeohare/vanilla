@@ -188,7 +188,12 @@ namespace Vanilla
 
         private Executable ParseWhile(TopLevelEntity owner)
         {
-            throw new NotImplementedException();
+            Token whileToken = tokens.PopExpected("while");
+            tokens.PopExpected("(");
+            Expression condition = this.ExprParser.ParseExpression(owner);
+            tokens.PopExpected(")");
+            Executable[] code = this.ExecParser.ParseCodeBlock(owner, false);
+            return new WhileLoop(whileToken, owner, condition, code);
         }
 
         private Executable ParseIf(TopLevelEntity owner)

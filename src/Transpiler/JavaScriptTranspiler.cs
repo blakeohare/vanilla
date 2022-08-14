@@ -6,6 +6,19 @@ namespace Vanilla.Transpiler
 {
     internal class JavaScriptTranspiler : AbstractTranspiler
     {
+        private static readonly string[] VUTIL_METHODS = new string[] {
+            "vutilGetCommonString",
+            "vutilGetInt",
+            "vutilGetString",
+            "vutilMapBuilder",
+            "vutilMapSet",
+            "vutilNewInstance",
+            "vutilNewMap",
+            "vutilSafeMod",
+            "vutilUnwrapNative",
+            "vutilWrapArray",
+            "vutilWrapNative",
+        };
         private bool standardWhitespaceEnabled = true;
         private int autoVarIdAlloc = 0;
 
@@ -43,23 +56,10 @@ namespace Vanilla.Transpiler
             outputFilePieces.Add(Resources.GetResourceText("Transpiler/Support/JavaScript/VContext.js"));
             outputFilePieces.Add(Resources.GetResourceText("Transpiler/Support/JavaScript/vutil.js"));
 
-            string[] vutilMethods = new string[] {
-                "vutilGetCommonString",
-                "vutilGetInt",
-                "vutilGetString",
-                "vutilMapSet",
-                "vutilNewInstance",
-                "vutilNewMap",
-                "vutilSafeMod",
-                "vutilUnwrapNative",
-                "vutilWrapArray",
-                "vutilWrapNative",
-            };
-
             outputFilePieces.Add(string.Join('\n', new string[] {
                 "const vctx = createVanillaContext();",
                 "const vutil = createVutil(vctx);",
-                "const { " + string.Join(", ", vutilMethods) + " } = vutil;",
+                "const { " + string.Join(", ", VUTIL_METHODS) + " } = vutil;",
             }));
 
             outputFilePieces.Add(outputFile);
@@ -167,20 +167,43 @@ namespace Vanilla.Transpiler
             string op = asgn.Op.Value;
             if (!omitSemicolon) ApplyExecPrefix();
 
-            SerializeExpression(target.InstanceContext, false);
-            Append(".f_" + target.FieldDefinition.Name);
-            Append(" = ");
-            if (floatCast)
+            if (op == "=")
             {
-                Append("vutilGetFloat(");
-                SerializeExpression(asgn.Value, false);
-                Append(')');
+                SerializeExpression(target.InstanceContext, false);
+                Append(".f_" + target.FieldDefinition.Name);
+                Append(" = ");
+                if (floatCast) // TODO: remove this in favor of FloatCast in the parse tree
+                {
+                    Append("vutilGetFloat(");
+                    SerializeExpression(asgn.Value, false);
+                    Append(')');
+                }
+                else
+                {
+                    SerializeExpression(asgn.Value, true);
+                }
             }
             else
             {
-                SerializeExpression(asgn.Value, true);
+                if (target.InstanceContext is ThisConstant || target.InstanceContext is Variable)
+                {
+                    SerializeExpression(target.InstanceContext, false);
+                    Append(".f_" + target.FieldDefinition.Name);
+                    Append(" = ");
+                    Append(target.ResolvedType.IsFloat ? "vutilGetFloat(" : "vutilGetInt(");
+                    SerializeExpression(target.InstanceContext, false);
+                    Append(".f_" + target.FieldDefinition.Name);
+                    Append(".value ");
+                    Append(op[0]);
+                    Append(" (");
+                    SerializeExpression(asgn.Value, false);
+                    Append("))");
+                }
+                else
+                {
+                    throw new System.NotImplementedException();
+                }
             }
-
             if (!omitSemicolon) ApplyExecSuffix();
         }
 
@@ -636,6 +659,7 @@ namespace Vanilla.Transpiler
 
         protected override void SerializePairComparision(PairComparison pc, bool useWrap)
         {
+            if (useWrap) Append("((");
             Append('(');
             SerializeExpression(pc.Left, false);
             Append(") ");
@@ -643,6 +667,7 @@ namespace Vanilla.Transpiler
             Append(" (");
             SerializeExpression(pc.Right, false);
             Append(')');
+            if (useWrap) Append(") ? vctx.constTrue : vctx.constFalse)");
         }
 
         protected override void SerializeReturnStatement(ReturnStatement rs)
@@ -737,6 +762,28 @@ namespace Vanilla.Transpiler
             {
                 Append(')');
             }
+        }
+
+        protected override void SerializeSysFuncArrayJoin(Expression array, Expression sep, bool useWrap)
+        {
+            if (useWrap) Append("vutilGetString(");
+            SerializeExpression(array, false);
+            Append(".map(v => v.value).join(");
+            SerializeExpression(sep, false);
+            Append(')');
+            if (useWrap) Append(')');
+        }
+
+        protected override void SerializeSysFuncArraySlice(Expression array, Expression start, Expression end, bool useWrap)
+        {
+            if (useWrap) Append("{ type: 'A', value: ");
+            SerializeExpression(array, false);
+            Append(".slice(");
+            SerializeExpression(start, false);
+            Append(", ");
+            SerializeExpression(end, false);
+            Append(')');
+            if (useWrap) Append(" }");
         }
 
         protected override void SerializeSysFuncFloor(Expression expr, bool useWrap)
@@ -907,6 +954,21 @@ namespace Vanilla.Transpiler
             }
 
             if (!omitSemicolon) ApplyExecSuffix();
+        }
+
+        protected override void SerializeWhileLoop(WhileLoop wl)
+        {
+            Append(this.CurrentTab);
+            Append("while (");
+            SerializeExpression(wl.Condition, false);
+            Append(") {");
+            Append(this.NL);
+            this.TabLevel++;
+            SerializeExecutables(wl.Code);
+            this.TabLevel--;
+            Append(this.CurrentTab);
+            Append('}');
+            Append(NL);
         }
     }
 }

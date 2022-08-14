@@ -260,6 +260,11 @@ namespace Vanilla.Transpiler
             if (!omitSemicolon) ApplyExecSuffix();
         }
 
+        protected override void SerializeWhileLoop(WhileLoop wl)
+        {
+            throw new System.NotImplementedException();
+        }
+
         protected override void SerializeSysFuncMapContains(Expression mapExpr, Expression keyExpr, bool useWrap)
         {
             throw new System.NotImplementedException();
@@ -381,6 +386,16 @@ namespace Vanilla.Transpiler
             Append("vutil_list_clone(vctx, ");
             SerializeExpression(originalCollection, true);
             Append(")");
+        }
+
+        protected override void SerializeSysFuncArrayJoin(Expression array, Expression sep, bool useWrap)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        protected override void SerializeSysFuncArraySlice(Expression array, Expression start, Expression end, bool useWrap)
+        {
+            throw new System.NotImplementedException();
         }
 
         protected override void SerializeReturnStatement(ReturnStatement rs)

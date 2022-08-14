@@ -5,8 +5,10 @@
         UNKNOWN,
 
         ARRAY_CAST_FROM,
+        ARRAY_JOIN,
         ARRAY_LENGTH,
         ARRAY_OF,
+        ARRAY_SLICE,
         FLOOR,
         LIST_ADD,
         LIST_LENGTH,

@@ -78,6 +78,14 @@ namespace Vanilla.ParseTree
                     }
                     break;
 
+                case SystemFunctionType.ARRAY_JOIN:
+                    EnsureArgsCompatible(resolver, new Type[] { Type.GetArrayType(Type.STRING), Type.STRING }, true);
+                    break;
+
+                case SystemFunctionType.ARRAY_SLICE:
+                    EnsureArgsCompatible(resolver, new Type[] { Type.GetArrayType(itemType), Type.INT, Type.INT }, true);
+                    break;
+
                 case SystemFunctionType.FLOOR:
                     EnsureArgsCompatible(resolver, new Type[] { Type.FLOAT }, false);
                     break;

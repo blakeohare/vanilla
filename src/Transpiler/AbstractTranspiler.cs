@@ -138,8 +138,11 @@ namespace Vanilla.Transpiler
         protected abstract void SerializeThisConstant(ThisConstant thiz, bool useWrap);
         protected abstract void SerializeVariable(Variable vd, bool useWrap);
         protected abstract void SerializeVariableDeclaration(VariableDeclaration vd, bool omitSemicolon);
+        protected abstract void SerializeWhileLoop(WhileLoop wl);
 
         protected abstract void SerializeSysFuncArrayCastFrom(Type targetItemType, Type sourceItemType, bool isArray, Expression originalCollection, bool useWrap);
+        protected abstract void SerializeSysFuncArrayJoin(Expression array, Expression sep, bool useWrap);
+        protected abstract void SerializeSysFuncArraySlice(Expression array, Expression start, Expression end, bool useWrap);
         protected abstract void SerializeSysFuncFloor(Expression expr, bool useWrap);
         protected abstract void SerializeSysFuncListAdd(Type itemType, Expression listExpr, Expression itemExpr, bool useWrap);
         protected abstract void SerializeSysFuncListLength(Expression expr, bool useWrap);
@@ -184,10 +187,11 @@ namespace Vanilla.Transpiler
                     return;
                 case "ExpressionAsExecutable": this.SerializeExpressionAsExecutable((ExpressionAsExecutable)ex, omitSemicolon); break;
                 case "ForLoop": this.SerializeForLoop((ForLoop)ex); break;
+                case "ForRangeLoop": this.SerializeForRangeLoop((ForRangeLoop)ex); break;
                 case "IfStatement": this.SerializeIfStatement((IfStatement)ex); break;
                 case "ReturnStatement": this.SerializeReturnStatement((ReturnStatement)ex); break;
                 case "VariableDeclaration": this.SerializeVariableDeclaration((VariableDeclaration)ex, omitSemicolon); break;
-                case "ForRangeLoop": this.SerializeForRangeLoop((ForRangeLoop)ex); break;
+                case "WhileLoop": this.SerializeWhileLoop((WhileLoop)ex); break;
                 default: throw new NotImplementedException(name);
             }
         }
@@ -255,7 +259,9 @@ namespace Vanilla.Transpiler
             switch (sfi.SysFuncId)
             {
                 case SystemFunctionType.ARRAY_CAST_FROM: this.SerializeSysFuncArrayCastFrom(sfi.ResolvedType.ItemType, sfi.ArgList[0].ResolvedType.ItemType, sfi.ArgList[0].ResolvedType.IsArray, sfi.ArgList[0], useWrap); break;
+                case SystemFunctionType.ARRAY_JOIN: this.SerializeSysFuncArrayJoin(sfi.ArgList[0], sfi.ArgList[1], useWrap);break;
                 case SystemFunctionType.ARRAY_LENGTH: this.SerializeSysFuncListLength(sfi.ArgList[0], useWrap); break;
+                case SystemFunctionType.ARRAY_SLICE: this.SerializeSysFuncArraySlice(sfi.ArgList[0], sfi.ArgList[1], sfi.ArgList[2], useWrap); break;
                 case SystemFunctionType.FLOOR: this.SerializeSysFuncFloor(sfi.ArgList[0], useWrap); break;
                 case SystemFunctionType.LIST_ADD: this.SerializeSysFuncListAdd(sfi.ArgList[0].ResolvedType.ItemType, sfi.ArgList[0], sfi.ArgList[1], useWrap); break;
                 case SystemFunctionType.LIST_LENGTH: this.SerializeSysFuncListLength(sfi.ArgList[0], useWrap); break;
