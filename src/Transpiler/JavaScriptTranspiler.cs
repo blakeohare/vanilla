@@ -682,8 +682,7 @@ namespace Vanilla.Transpiler
 
         protected override void SerializeStringConstant(StringConstant sc, bool useWrap)
         {
-            // TODO: this is a terrible hack
-            string codeValue = "`" + sc.Value.Replace("\\", "\\\\").Replace("'", "\\'") + "`";
+            string codeValue = StringUtil.stringValueToCode(sc.Value);
             if (useWrap)
             {
                 if (sc.Value.Length == 0)

@@ -192,8 +192,8 @@ const { vutilGetCommonString, vutilGetInt, vutilGetString, vutilMapSet, vutilNew
 const findPrimes = (upperLimit) => {
     let primes = generatePrimeList(vctx.numPos[1], upperLimit);
     let output = vutilNewMap(false);
-    vutilMapSet(output, vutilGetCommonString(`ok`), vctx.constTrue);
-    vutilMapSet(output, vutilGetCommonString(`nums`), vutilWrapArray((primes.value).slice(0)));
+    vutilMapSet(output, vutilGetCommonString("ok"), vctx.constTrue);
+    vutilMapSet(output, vutilGetCommonString("nums"), vutilWrapArray((primes.value).slice(0)));
     return output;
 };
 

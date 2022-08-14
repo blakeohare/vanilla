@@ -34,7 +34,7 @@ namespace Vanilla.Transpiler
             });
             for (int i = 0; i < stringTableMembers.Length; i++)
             {
-                string escapedString = '"' + stringTableMembers[i].Replace("\"", "\\\"") + '"'; // TODO: This is a hack just to get it compiling. Need to escape strings with LATIN-only characters. Then need to create an alternative factory method for strings with special characters.
+                string escapedString = StringUtil.stringValueToCode(stringTableMembers[i]);
                 outputFilePieces.Add("    vctx->string_table[" + i + "] = vutil_get_string_from_chars(vctx, " + escapedString + ");");
             }
             outputFilePieces.Add("    return vctx;");
